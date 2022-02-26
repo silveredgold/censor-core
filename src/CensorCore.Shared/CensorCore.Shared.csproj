@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../CensorCore.props" />
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>CensorCore</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="../CensorCore.props" />
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>true</IsPublishable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CensorCore.Web\CensorCore.Web.csproj" />
+    <ProjectReference Include="..\CensorCore\CensorCore.csproj" />
+    <ProjectReference Include="..\CensorCore.ModelLoader\CensorCore.ModelLoader.csproj" />
+  </ItemGroup>
+
+</Project>

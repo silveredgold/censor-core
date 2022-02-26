@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CensorCore", "CensorCore\CensorCore.csproj", "{CE0D4A4C-78CF-471C-B604-16FC35890701}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CensorCore.Console", "CensorCore.Console\CensorCore.Console.csproj", "{FCFC05A9-67A4-48E5-931D-47E67DCFB96E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CensorCore.Shared", "CensorCore.Shared\CensorCore.Shared.csproj", "{3B4CB6E0-338E-4094-87D6-DD33B6B66E67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CensorCore.Web", "CensorCore.Web\CensorCore.Web.csproj", "{A4D086CC-8F1B-4D9A-B2AF-E15128A4ABAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CensorCore.Server", "CensorCore.Server\CensorCore.Server.csproj", "{9327FC77-E7ED-4224-90EE-6D5BADA13876}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CensorCore.ModelLoader", "CensorCore.ModelLoader\CensorCore.ModelLoader.csproj", "{F3ABC835-C215-4F66-8E09-EB205BCD600E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE0D4A4C-78CF-471C-B604-16FC35890701}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE0D4A4C-78CF-471C-B604-16FC35890701}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE0D4A4C-78CF-471C-B604-16FC35890701}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE0D4A4C-78CF-471C-B604-16FC35890701}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCFC05A9-67A4-48E5-931D-47E67DCFB96E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCFC05A9-67A4-48E5-931D-47E67DCFB96E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCFC05A9-67A4-48E5-931D-47E67DCFB96E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCFC05A9-67A4-48E5-931D-47E67DCFB96E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B4CB6E0-338E-4094-87D6-DD33B6B66E67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B4CB6E0-338E-4094-87D6-DD33B6B66E67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B4CB6E0-338E-4094-87D6-DD33B6B66E67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B4CB6E0-338E-4094-87D6-DD33B6B66E67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4D086CC-8F1B-4D9A-B2AF-E15128A4ABAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4D086CC-8F1B-4D9A-B2AF-E15128A4ABAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4D086CC-8F1B-4D9A-B2AF-E15128A4ABAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4D086CC-8F1B-4D9A-B2AF-E15128A4ABAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9327FC77-E7ED-4224-90EE-6D5BADA13876}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9327FC77-E7ED-4224-90EE-6D5BADA13876}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9327FC77-E7ED-4224-90EE-6D5BADA13876}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9327FC77-E7ED-4224-90EE-6D5BADA13876}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3ABC835-C215-4F66-8E09-EB205BCD600E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3ABC835-C215-4F66-8E09-EB205BCD600E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3ABC835-C215-4F66-8E09-EB205BCD600E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3ABC835-C215-4F66-8E09-EB205BCD600E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B24D9478-809C-4497-B03F-2D0F8166D8E5}
+	EndGlobalSection
+EndGlobal
