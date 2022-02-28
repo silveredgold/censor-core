@@ -4,6 +4,7 @@
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
+var runtimeSpec = Argument<string>("publish-runtimes", "win-x64;osx-x64;linux-x64");
 
 ///////////////////////////////////////////////////////////////////////////////
 // VERSIONING
@@ -20,6 +21,8 @@ var solutionPath = File("./src/CensorCore.sln");
 var solution = ParseSolution(solutionPath);
 var projects = GetProjects(solutionPath, configuration);
 var artifacts = "./dist/";
+var modelPath = "./detector_v2_default_checkpoint.onnx";
+var runtimes = runtimeSpec.Split(';').ToList();
 
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
@@ -69,7 +72,9 @@ Task("Build")
 	var settings = new DotNetBuildSettings {
 		Configuration = configuration,
 		NoIncremental = true,
-		ArgumentCustomization = args => args.Append($"/p:Version={packageVersion}").Append("/p:AssemblyVersion=1.0.0.0")
+		ArgumentCustomization = args => args
+			.Append($"/p:Version={packageVersion}")
+			.Append("/p:AssemblyVersion=1.0.0.0")
 	};
 	DotNetBuild(solutionPath, settings);
 });
@@ -95,52 +100,81 @@ Task("NuGet")
 	}
 });
 
+Task("Publish-NuGet-Package")
+.IsDependentOn("NuGet")
+.WithCriteria(() => HasEnvironmentVariable("NUGET_TOKEN"))
+.WithCriteria(() => HasEnvironmentVariable("GITHUB_REF"))
+.WithCriteria(() => EnvironmentVariable("GITHUB_REF").StartsWith("refs/tags/v") || EnvironmentVariable("GITHUB_REF") == "refs/heads/main")
+.Does(() => {
+    var nugetToken = EnvironmentVariable("NUGET_TOKEN");
+    var pkgFiles = GetFiles($"{artifacts}package/*.nupkg");
+	Information($"Pushing {pkgFiles.Count()} package files!");
+    NuGetPush(pkgFiles, new NuGetPushSettings {
+      Source = "https://api.nuget.org/v3/index.json",
+      ApiKey = nugetToken
+    });
+});
+
 Task("Publish-Runtime")
 	.IsDependentOn("Build")
 	.Does(() =>
 {
-	var projectDir = $"{artifacts}publish";
+	var projectDir = $"{artifacts}server";
+	var projPath = "./src/CensorCore.Server/CensorCore.Server.csproj";
 	CreateDirectory(projectDir);
-	foreach (var project in projects.SourceProjects.Where(p => !p.Name.Contains(".Console")))
-	{
-		var projPath = project.Path.FullPath;
-		DotNetPublish(projPath, new DotNetPublishSettings {
-			OutputDirectory = projectDir + "/dotnet-any",
+	DotNetPublish(projPath, new DotNetPublishSettings {
+		OutputDirectory = projectDir + "/dotnet-any",
+		Configuration = configuration,
+		PublishSingleFile = false,
+		PublishTrimmed = false,
+		ArgumentCustomization = args => args.Append($"/p:Version={packageVersion}").Append("/p:AssemblyVersion=1.0.0.0")
+	});
+	foreach (var runtime in runtimes) {
+		var runtimeDir = $"{projectDir}/{runtime}";
+		CreateDirectory(runtimeDir);
+		Information("Publishing for {0} runtime", runtime);
+		var settings = new DotNetPublishSettings {
+			Runtime = runtime,
+			SelfContained = true,
 			Configuration = configuration,
-			PublishSingleFile = false,
-			PublishTrimmed = false,
+			OutputDirectory = runtimeDir,
+			// PublishSingleFile = true,
+			PublishTrimmed = true,
+			// IncludeNativeLibrariesForSelfExtract = true,
 			ArgumentCustomization = args => args.Append($"/p:Version={packageVersion}").Append("/p:AssemblyVersion=1.0.0.0")
-		});
-		var runtimes = new[] { "win-x64", "osx-x64", "linux-x64"};
-		foreach (var runtime in runtimes) {
-			var runtimeDir = $"{projectDir}/{runtime}";
-			CreateDirectory(runtimeDir);
-			Information("Publishing for {0} runtime", runtime);
-			var settings = new DotNetPublishSettings {
-				Runtime = runtime,
-				SelfContained = true,
-				Configuration = configuration,
-				OutputDirectory = runtimeDir,
-				// PublishSingleFile = true,
-				PublishTrimmed = true,
-				// IncludeNativeLibrariesForSelfExtract = true,
-				ArgumentCustomization = args => args.Append($"/p:Version={packageVersion}").Append("/p:AssemblyVersion=1.0.0.0")
-			};
-			DotNetPublish(projPath, settings);
-			CreateDirectory($"{artifacts}archive");
-			Zip(runtimeDir, $"{artifacts}archive/censorcore-{runtime}.zip");
-		}
+		};
+		DotNetPublish(projPath, settings);
+		CleanDirectory(runtimeDir, fsi => fsi.Path.FullPath.EndsWith("onnxruntime.pdb") || fsi.Path.FullPath.EndsWith("onnxruntime.lib"));
+		CreateDirectory($"{artifacts}archive");
+		Zip(runtimeDir, $"{artifacts}archive/censorcore-server-{runtime}.zip");
 	}
 });
 
-Task("Publish-Standalone")
+#load "build/github.cake"
+Task("Publish-Console")
+	// .IsDependentOn("Download-Model") // not all the while we're not embedding anything!
 	.IsDependentOn("Build")
 	.Does(() => 
 {
 	var consoleDir = $"{artifacts}console";
-	var runtimes = new[] { "win-x64", "osx-x64", "linux-x64"};
 	var projPath = "./src/CensorCore.Console/CensorCore.Console.csproj";
+	// var absoluteProjectPath = MakeAbsolute(Directory("./src/CensorCore.Console/"));
+	// var absoluteModelPath = MakeAbsolute(File(modelPath));
+	// Information($"Absolute: {absoluteProjectPath}");
+	// var relModelPath = MakeRelative(absoluteModelPath, absoluteProjectPath);
+	// Information($"Relative: {relModelPath}");
 	foreach (var runtime in runtimes) {
+		// var buildSettings = new DotNetBuildSettings {
+		// 	Configuration = configuration,
+		// 	NoIncremental = true,
+		// 	Runtime = runtime,
+		// 	ArgumentCustomization = args => args
+		// 		.Append($"/p:Version={packageVersion}")
+		// 		.Append("/p:AssemblyVersion=1.0.0.0")
+		// 		// .Append($"/p:EmbedModel='embed'")
+		// 		.Append("--self-contained")
+		// };
+		// DotNetBuild(projPath, buildSettings);
 		var runtimeDir = $"{consoleDir}/{runtime}";
 		CreateDirectory(runtimeDir);
 		Information("Publishing for {0} runtime", runtime);
@@ -152,12 +186,14 @@ Task("Publish-Standalone")
 			PublishSingleFile = true,
 			PublishTrimmed = true,
 			IncludeNativeLibrariesForSelfExtract = true,
+			NoBuild = false,
 			ArgumentCustomization = args => args
 				.Append($"/p:Version={packageVersion}")
 				.Append("/p:AssemblyVersion=1.0.0.0")
-				.Append("/p:EmbedModel='embed'")
+				// .Append("/p:EmbedModel='embed'")
 		};
 		DotNetPublish(projPath, settings);
+		CleanDirectory(runtimeDir, fsi => fsi.Path.FullPath.EndsWith("onnxruntime.pdb") || fsi.Path.FullPath.EndsWith("onnxruntime.lib"));
 	}
 	CreateDirectory($"{artifacts}archive");
 	Zip(consoleDir, $"{artifacts}archive/censorcore-console.zip");
@@ -167,8 +203,13 @@ Task("Default")
 	.IsDependentOn("Build");
 
 Task("Publish")
+	.IsDependentOn("NuGet")
 	.IsDependentOn("Publish-Runtime")
-	.IsDependentOn("Publish-Standalone");
+	.IsDependentOn("Publish-Console");
+
+Task("Release")
+	.IsDependentOn("Publish")
+	.IsDependentOn("Publish-NuGet-Package");
 
 RunTarget(target);
 

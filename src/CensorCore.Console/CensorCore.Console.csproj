@@ -11,6 +11,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
+    <EmbedModel></EmbedModel>
   </PropertyGroup>
 
   <!-- <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -18,7 +19,8 @@
   </PropertyGroup> -->
 
   <ItemGroup>
-    <EmbeddedResource Condition="'$(EmbedModel)'=='embed'" Include="../../detector_v2_default_checkpoint.onnx" />
+    <!-- <EmbeddedResource Condition="'$(EmbedModel)'=='embed'" Include="$(ProjectDir)../../detector_v2_default_checkpoint.onnx" /> -->
+    <EmbeddedResource Condition="'$(EmbedModel)' != ''" Include="..\..\*.onnx" />
   </ItemGroup>
 
   <ItemGroup>

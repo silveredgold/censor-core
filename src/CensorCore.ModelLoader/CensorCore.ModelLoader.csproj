@@ -10,4 +10,8 @@
     <PackageReference Include="Octokit" Version="0.50.0" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <PackageId>CensorCore.ModelLoader</PackageId>
+    <PackageDescription>A *standalone* CensorCore component for consistently discovering and loading a NudeNet model. Allows for consistent conventions and abstracts away (optionally) downloading the model from GitHub.</PackageDescription>
+  </PropertyGroup>
 </Project>

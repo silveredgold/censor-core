@@ -11,31 +11,37 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
     public override async Task<int> ExecuteAsync(CommandContext context, CensorCommandSettings settings) {
         var imagePath = settings.ImagePath == null ? null : Path.IsPathFullyQualified(settings.ImagePath) ? settings.ImagePath : Path.GetFullPath(settings.ImagePath);
         if (imagePath == null || !File.Exists(imagePath)) {
-            AnsiConsole.WriteLine("[red]ERROR! [/] Could not load source image file!");
-            AnsiConsole.WriteLine($"Please ensure the '[grey]{imagePath}[/]' file exists and try again!");
+            AnsiConsole.MarkupLine("[red]ERROR! [/] Could not load source image file!");
+            AnsiConsole.MarkupLine($"Please ensure the '[grey]{imagePath}[/]' file exists and try again!");
             return 404;
         }
         var loader = new ModelLoaderBuilder()
             .AddDefaultPaths()
-            .SearchAssembly(System.Reflection.Assembly.GetEntryAssembly())
+            // .SearchAssembly(System.Reflection.Assembly.GetEntryAssembly())
+            .SearchAssembly(typeof(CensorCommand).Assembly)
             .Build();
         var model = await loader.GetLocalModel(settings.ModelFilePath);
         if (model == null && settings.AllowDownload) {
+            AnsiConsole.MarkupLine($"Downloading model files from GitHub! This should only be required once.");
             try {
-                model = await loader.DownloadModel();
+                var dl = await loader.DownloadModel(true);
+                if (dl.HasValue) {
+                    AnsiConsole.MarkupLine($"Downloaded [green]'{dl.Value.FileName}'[/] from GitHub, ready to use.");
+                    model = dl.Value.ModelData;
+                }
             }
-            catch {
-                AnsiConsole.WriteLine("[darkred]WARN:[/] Failed to download model files from GitHub!");
+            catch (Exception e) {
+                AnsiConsole.MarkupLine("[darkred]WARN:[/] Failed to download model files from GitHub!");
             }
         }
         if (model == null) {
-            AnsiConsole.WriteLine("[red]ERROR! [/] Could not load model file!");
-            AnsiConsole.WriteLine("Download the model to a searched location, set [grey]--allow-download[/] or pass [grey]--model-file[/] to specify a model file!");
+            AnsiConsole.MarkupLine("[red]ERROR! [/] Could not load model file!");
+            AnsiConsole.MarkupLine("Download the model to a searched location, set [grey]--download[/] or pass [grey]--model-file[/] to specify a model file!");
             return 412;
         }
 
         var handler = new ImageSharpHandler(1000, 1000);
-        AnsiConsole.WriteLine("Preparing AI service and censoring components");
+        AnsiConsole.MarkupLine("Preparing AI service and censoring components");
         var svc = AIService.Create(model, new ImageSharpHandler(1000, 1000), settings.EnableAcceleration);
         var blur = new BlurProvider();
         var pixel = new PixelationProvider();
@@ -43,32 +49,32 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         var stickers = new StickerProvider(new EmptyAssetStore());
         var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers });
 
-        AnsiConsole.WriteLine("Invoking model...");
+        AnsiConsole.MarkupLine("Invoking model...");
         var result = await svc.RunModel(imagePath);
         if (result != null) {
-            AnsiConsole.WriteLine($"Successfully matched image with [skyblue]{result.Results.Count}[/] matches found.");
+            AnsiConsole.MarkupLine($"Successfully matched image with [blue]{result.Results.Count}[/] matches found.");
             CensoredImage? censoredResult = null;
             IResultParser? parser = null;
             if (settings.OverrideFilePath != null) {
                 var oParser = new OverrideFileParser(settings.OverrideFilePath);
                 var loaded = await oParser.Load();
                 if (loaded && oParser._overrides != null) {
-                    AnsiConsole.WriteLine($"Successfully loaded [skyblue]{oParser._overrides.Keys.Count}[/] overrides from file.");
+                    AnsiConsole.MarkupLine($"Successfully loaded [blue]{oParser._overrides.Keys.Count}[/] overrides from file.");
                     parser = oParser;
                 } else {
-                    AnsiConsole.WriteLine($"Failed to load overrides from [grey]'{Path.GetFileName(settings.OverrideFilePath)}'[/]. Continuing with defaults...");
+                    AnsiConsole.MarkupLine($"Failed to load overrides from [grey]'{Path.GetFileName(settings.OverrideFilePath)}'[/]. Continuing with defaults...");
                 }
             }
-            AnsiConsole.WriteLine("Running censoring on image...");
+            AnsiConsole.MarkupLine("Running censoring on image...");
             censoredResult = await cens.CensorImage(result, parser);
             if (censoredResult != null) {
-                AnsiConsole.WriteLine("Censoring completed on image!");
+                AnsiConsole.MarkupLine("Censoring completed on image!");
                 var outputFilePath = settings.OutputPath
                     ?? Path.Combine(Environment.CurrentDirectory, $"{Path.GetFileNameWithoutExtension(imagePath)}_censored.{censoredResult.MimeType.Split("/").Last()}");
                 await File.WriteAllBytesAsync(outputFilePath, censoredResult.ImageContents);
-                AnsiConsole.WriteLine($"Wrote censored image to '[grey]{outputFilePath}[/]'!");
+                AnsiConsole.MarkupLine($"Wrote censored image to '[grey]{outputFilePath}[/]'!");
                 if (settings.CopyUrlToClipboard && !string.IsNullOrWhiteSpace(censoredResult.ImageDataUrl)) {
-                    AnsiConsole.WriteLine("Copying image data URL to clipboard...");
+                    AnsiConsole.MarkupLine("Copying image data URL to clipboard...");
                     await ClipboardService.SetTextAsync(censoredResult.ImageDataUrl);
                 }
             }
@@ -93,6 +99,15 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         public string? OverrideFilePath { get; set; }
     }
 
+    static string CalculateMD5(byte[] model)
+{
+    using (var md5 = System.Security.Cryptography.MD5.Create())
+    {
+        var hash = md5.ComputeHash(model);
+        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+    }
+}
+
 }
 
 public class CensoringSettings : CommandSettings {
@@ -113,3 +128,5 @@ public class CensoringSettings : CommandSettings {
     [DefaultValue(false)]
     public bool EnableAcceleration { get; set; }
 }
+
+

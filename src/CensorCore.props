@@ -10,6 +10,7 @@
         <RepositoryUrl>https://github.com/silveredgold/censor-core</RepositoryUrl>
         <PackageProjectUrl>https://github.com/silveredgold/censor-core</PackageProjectUrl>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-        <PackageLicenseExpression>GPL-3.0-or-later	</PackageLicenseExpression>
+        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+        <PackageTags>nudenet;censoring;image detection;</PackageTags>
     </PropertyGroup>
 </Project>

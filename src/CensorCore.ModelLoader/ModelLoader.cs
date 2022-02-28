@@ -17,7 +17,10 @@ public class ModelLoader {
     public async Task<byte[]?> GetModel(string? filePath = null) {
         var local = await GetLocalModel(filePath);
         if (local == null) {
-            local = await DownloadModel();
+            var dl = await DownloadModel(true);
+            if (dl.HasValue) {
+                local = dl.Value.ModelData;
+            }
         }
         return local;
     }
@@ -45,9 +48,17 @@ public class ModelLoader {
         }
     }
 
-    public async Task<byte[]?> DownloadModel() {
+    public async Task<(string FileName, byte[] ModelData)?> DownloadModel(bool saveToSharedLocation = false) {
         var client = new RepositoryDownloadClient(_options.RepositorySlug);
         var model = await client.DownloadModel(_options.GetClassifier, _options.PreferBaseModel);
+        if (model != null && saveToSharedLocation) {
+            try {
+                var tempPath = Path.Combine(Path.GetTempPath(), ".nudenet");
+                await File.WriteAllBytesAsync(Path.Combine(tempPath, model.Value.FileName), model.Value.ModelData);
+            } catch {
+                //ignored
+            }
+        }
         return model;
     }
 
@@ -65,9 +76,13 @@ public class ModelLoader {
     private static byte[]? GetModelResource(Assembly? assembly = null) {
 
         var entryAssembly = assembly ?? typeof(ModelLoader).Assembly;
-
         var model = entryAssembly.GetManifestResourceNames();
+        if (model != null && model.Any()) {
+            Console.WriteLine(string.Join(';', model));
+        }
+        //TODO: this doesn't match right
         if (model != null && model.Any() && model.FirstOrDefault(r => r.EndsWith(".onnx")) is var modelResource && modelResource != null) {
+            // Console.WriteLine($"reading stream from {modelResource}");
             using var resourceStream = entryAssembly.GetManifestResourceStream(modelResource);
             if (resourceStream != null && resourceStream.CanRead) {
                 var modelBytes = ExtractStreamResource(resourceStream);
@@ -82,14 +97,18 @@ public class ModelLoader {
     private static byte[]? ExtractStreamResource(Stream resFilestream) {
         if (resFilestream == null) return null;
         byte[] bytes = new byte[resFilestream.Length];
-        int numBytesToRead = (int)resFilestream.Length;
-        int numBytesRead = 0;
-        do {
-            // Read may return anything from 0 to 10.
-            int n = resFilestream.Read(bytes, numBytesRead, 10);
-            numBytesRead += n;
-            numBytesToRead -= n;
-        } while (numBytesToRead > 0);
+        // Console.WriteLine($"reading stream of length '{resFilestream.Length}'");
+        var reader = new BinaryReader(resFilestream);
+        var readBytes = reader.ReadBytes(Convert.ToInt32(resFilestream.Length));
+        // Console.WriteLine($"Read '{readBytes.Length}' bytes from resources");
+        // int numBytesToRead = (int)resFilestream.Length;
+        // int numBytesRead = 0;
+        // do {
+        //     // Read may return anything from 0 to 10.
+        //     int n = resFilestream.Read(bytes, numBytesRead, 10);
+        //     numBytesRead += n;
+        //     numBytesToRead -= n;
+        // } while (numBytesToRead > 0);
         return bytes;
     }
 }

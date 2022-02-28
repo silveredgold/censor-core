@@ -7,4 +7,9 @@
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>CensorCore.Shared</PackageId>
+    <PackageDescription>Shared types used across CensorCore projects. Don't references/depend on this! There is no API stability and this project may even be removed in future: depend on CensorCore.</PackageDescription>
+  </PropertyGroup>
+
 </Project>

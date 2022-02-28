@@ -10,6 +10,11 @@
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>CensorCore.Web</PackageId>
+    <PackageDescription>A lightweight HTTP API implementation that uses CensorCore to censor remote image. This library contains the controllers and types required for a HTTP API implementation, but does not include a server.</PackageDescription>
+  </PropertyGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

@@ -6,6 +6,11 @@
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>CensorCore</PackageId>
+    <PackageDescription>The core package for CensorCore, a flexible and modular framework for censoring NSFW images based on the NudeNet ML model.</PackageDescription>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.10.0" /> -->
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.10.0" />

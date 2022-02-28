@@ -21,7 +21,7 @@ public class OverrideFileParser : IResultParser {
         try {
             if (_file.Exists) {
                 var json = await File.ReadAllTextAsync(_file.FullName);
-                var dict = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json);
+                var dict = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json, SourceGenerationContext.Default.Dictionary);
                 if (dict != null && dict.Keys.Any()) {
                     _overrides = dict;
                     return true;
