@@ -26,5 +26,19 @@ namespace CensorCore
         /// </summary>
         /// <value>The classification results.</value>
         public List<Classification> Results { get; }
+
+        public SessionMetadata? Session {get; set;}
+    }
+
+    public class SessionMetadata {
+        public TimeSpan ModelRunTime {get;set;}
+        public TimeSpan? ImageLoadTime {get;set;}
+        public TimeSpan? TensorLoadTime {get;set;}
+        public string ModelName {get;set;}
+
+        public SessionMetadata(string modelName, TimeSpan modelRunTime) {
+            ModelName = modelName;
+            ModelRunTime = modelRunTime;
+        }
     }
 }

@@ -20,6 +20,13 @@ namespace CensorCore
         public static readonly string[] ClassList = new[] {"EXPOSED_ANUS", "EXPOSED_ARMPITS", "COVERED_BELLY", "EXPOSED_BELLY", "COVERED_BUTTOCKS", "EXPOSED_BUTTOCKS", "FACE_F", "FACE_M", "COVERED_FEET", "EXPOSED_FEET", "COVERED_BREAST_F", "EXPOSED_BREAST_F", "COVERED_GENITALIA_F", "EXPOSED_GENITALIA_F", "EXPOSED_BREAST_M", "EXPOSED_GENITALIA_M"};
         private readonly InferenceSession _session;
         private readonly IImageHandler _imageHandler;
+        public bool Verbose {get;set;} = false;
+
+        private void Log(string message) {
+            if (Verbose) {
+                Console.WriteLine(message);
+            }
+        }
 
         public SessionOptions Options => new SessionOptions()
         {
@@ -76,39 +83,57 @@ namespace CensorCore
             this._imageHandler = imageHandler;
         }
 
-        public async Task<ImageResult> RunModel(byte[] data) {
+        public async Task<ImageResult?> RunModel(byte[] data) {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImageData(data);
             timer.Stop();
-            Console.WriteLine($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
-            return await RunModelForImage(imageData);
+            Log($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
+            var result = await RunModelForImage(imageData);
+            if (result != null && result.Session != null) {
+                result.Session.ImageLoadTime = timer.Elapsed;
+            }
+            return result;
         }
         
-        public async Task<ImageResult> RunModel(string url)
+        public async Task<ImageResult?> RunModel(string url)
         {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImage(url);
             timer.Stop();
-            Console.WriteLine($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
-            return await RunModelForImage(imageData);
+            Log($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
+            var result = await RunModelForImage(imageData);
+            if (result != null && result.Session != null) {
+                result.Session.ImageLoadTime = timer.Elapsed;
+            }
+            return result;
         }
 
-        private async Task<ImageResult> RunModelForImage(ImageData imageData) {
+        private async Task<ImageResult?> RunModelForImage(ImageData imageData) {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Restart();
             var modelInput = await this._imageHandler.LoadToTensor(imageData);
             timer.Stop();
-            Console.WriteLine($"Loaded tensor data in {timer.Elapsed.TotalSeconds}s");
+            var tensorLoadTime = timer.Elapsed;
+            Log($"Loaded tensor data in {timer.Elapsed.TotalSeconds}s");
             timer.Restart();
             var feeds = GetFeeds(modelInput).ToList();
             var output = this._session.Run(feeds);
-            Console.WriteLine($"Finished model in {timer.Elapsed.TotalSeconds}s");
+            var runTime = timer.Elapsed;
+            Log($"Finished model in {timer.Elapsed.TotalSeconds}s");
             timer.Restart();
             var classifications = this.GetResults(imageData, output.ToList(), MatchOptions.GetDefault()).ToList();
-            var result = new ImageResult(imageData, classifications);
-            Console.WriteLine($"Built results in {timer.Elapsed.TotalSeconds}s");
+            var modelName = string.IsNullOrWhiteSpace(this._session.ModelMetadata.Description)
+                ? this._session.ModelMetadata.GraphName
+                : this._session.ModelMetadata.Description;
+            var sessionMeta = new SessionMetadata(modelName, runTime) {
+                TensorLoadTime = tensorLoadTime
+            };
+            var result = new ImageResult(imageData, classifications) {
+                Session = sessionMeta
+            };
+            Log($"Built results in {timer.Elapsed.TotalSeconds}s");
             timer.Reset();
             return result;
         }

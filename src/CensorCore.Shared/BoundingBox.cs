@@ -14,4 +14,8 @@ public class BoundingBox
     public float Y { get; set; }
     public int Height { get; set; }
     public int Width { get; set; }
+
+    public string ToSize() {
+        return $"{Width}x{Height}";
+    }
 }
