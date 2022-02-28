@@ -32,6 +32,7 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
             }
             catch (Exception e) {
                 AnsiConsole.MarkupLine("[darkred]WARN:[/] Failed to download model files from GitHub!");
+                AnsiConsole.MarkupLine($"[grey]Exception: {e.Message} ({e.ToString()})");
             }
         }
         if (model == null) {
