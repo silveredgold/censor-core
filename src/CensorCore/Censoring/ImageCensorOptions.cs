@@ -9,7 +9,7 @@ namespace CensorCore.Censoring
         }
 
         [System.Text.Json.Serialization.JsonConstructor]
-        public ImageCensorOptions(string censorType, int level) : this(censorType)
+        public ImageCensorOptions(string censorType, int? level) : this(censorType)
         {
             Level = level;
         }
