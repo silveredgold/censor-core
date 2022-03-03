@@ -2,6 +2,7 @@
     "FormattingOptions": {
         "NewLinesForBracesInTypes": false,
         "NewLinesForBracesInMethods": false,
-        "NewLinesForBracesInControlBlocks": false
+        "NewLinesForBracesInControlBlocks": false,
+        "NewLinesForBracesInObjectCollectionArrayInitializers": false
     }
 }

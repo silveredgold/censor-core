@@ -1,6 +1,5 @@
-namespace CensorCore.Censoring
-{
+namespace CensorCore.Censoring {
     public interface IResultParser {
-        ImageCensorOptions GetOptions(Classification result, ImageResult? image = null);
+        ImageCensorOptions? GetOptions(Classification result, ImageResult? image = null);
     }
 }
