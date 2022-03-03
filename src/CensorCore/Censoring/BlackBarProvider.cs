@@ -25,6 +25,6 @@ namespace CensorCore.Censoring
             return Task.FromResult<Image<Rgba32>?>(null);
         }
 
-        public bool Supports(string censorType) => censorType.Contains("bars") || censorType == "bb";
+        public bool Supports(string censorType) => censorType.Contains("bars") || censorType == "bb" || censorType.Contains("blackb");
     }
 }

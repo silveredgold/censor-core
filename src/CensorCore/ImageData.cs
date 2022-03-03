@@ -10,6 +10,6 @@ namespace CensorCore
         }
         internal Image<Rgba32> SourceImage { get; set; }
         internal Image<Rgba32>? SampledImage {get;set;}
-        internal float ScaleFactor {get;set;} = 1;
+        public float ScaleFactor {get;set;} = 1;
     }
 }

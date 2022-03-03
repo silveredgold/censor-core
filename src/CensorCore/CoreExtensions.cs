@@ -6,11 +6,6 @@ namespace CensorCore {
             return opts.ClassScores.GetValueOrDefault(className, opts.MinimumScore);
         }
 
-        internal static BoundingBox ToBox(this float[] coords)
-        {
-            return new BoundingBox(coords[0], coords[1], coords[2], coords[3]);
-        }
-
         internal static BoundingBox ToBox(this float[] coords, float scaleFactor)
         {
             return new BoundingBox(coords[0] * scaleFactor, coords[1] * scaleFactor, coords[2] * scaleFactor, coords[3] * scaleFactor);
