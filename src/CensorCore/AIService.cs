@@ -48,16 +48,22 @@ namespace CensorCore
         public static AIService Create(byte[] model, IImageHandler imageHandler, bool enableAcceleration = true) {
             var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             if (isWindows && enableAcceleration) {
-                try {
-                var hwOpts = new SessionOptions()
-                {
-                };
-                hwOpts.AppendExecutionProvider_DML();
-                var hwSession = new InferenceSession(model, hwOpts);
-                return new AIService(hwSession, imageHandler);
-                } catch {
-                    Console.WriteLine("WARN: Failed to initialize hardware acceleration!");
+                InferenceSession? hwSession = null;
+                var deviceId = 0;
+                while (hwSession == null && deviceId < 2) {
+                    try {
+                        var hwOpts = new SessionOptions() {
+                        
+                        };
+                        hwOpts.AppendExecutionProvider_DML(deviceId);
+                        hwSession = new InferenceSession(model, hwOpts);
+                        return new AIService(hwSession, imageHandler);
+                    }
+                    catch {
+                        deviceId++;
+                    }
                 }
+                Console.WriteLine("WARN: Failed to initialize hardware acceleration!");
             }
             var opts = new SessionOptions()
             {
