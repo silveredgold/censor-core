@@ -22,8 +22,9 @@ namespace CensorCore.Censoring
         {
             this._globalOpts = options;
         }
-        public async Task<Image<Rgba32>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
+        public async Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
         {
+            var mutations = new List<Action<IImageProcessingContext>>();
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
             var categories = GetCategories(method);
@@ -34,7 +35,7 @@ namespace CensorCore.Censoring
                 x.Crop(cropRect);
                 x.GaussianBlur(Math.Max(level, 10)*2);
             });
-            mask.DrawMaskedEffect(inputImage, extract);
+            mutations.Add(mask.GetMutation(extract));
             var effectCenter = result.Box.GetCenter();
             if (sticker != null) {
                 var stickerImage = Image.Load(sticker);
@@ -48,12 +49,17 @@ namespace CensorCore.Censoring
                         s.Resize(resizeOpts);
                     });
                     var targetLoc = new Point(effectCenter.X - (stickerImage.Width/2), effectCenter.Y - (stickerImage.Height/2));
-                    inputImage.Mutate(x => {
+                    mutations.Add(x => {
                         x.DrawImage(stickerImage, targetLoc, Math.Min(level/10F,1));
                     });
                 }
             }
-            return null;
+            return x => {
+                foreach (var mutation in mutations)
+                {
+                    mutation(x);
+                }
+            };
         }
 
         public bool Supports(string censorType) => censorType.StartsWith("sticker");

@@ -141,5 +141,12 @@ namespace CensorCore.Censoring
                 });
             return inputImage;
         }
+
+        public Action<IImageProcessingContext> GetMutation(Image censor) {
+            var masked = GetMaskedImage(censor);
+            return (x => {
+                x.DrawImage(masked, new Point(Convert.ToInt32(this._box.X-this._padding), Convert.ToInt32(this._box.Y-this._padding)), 1);
+            });
+        }
     }
 }

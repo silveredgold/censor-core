@@ -84,15 +84,15 @@ namespace CensorCore
             return Task.FromResult(new InputImage(data, image));
         }
 
-        public Task<ImageData> LoadImageData(byte[] contents)
-        {
-            Image<Rgba32>? img = Image.Load<Rgba32>(contents);
-                var samples = this.ResizeImage(img);
-                float scaleFactor = (float)img.Height / samples.Height;
-                return Task.FromResult(new ImageData(img) {
-                    SampledImage = samples,
-                    ScaleFactor = scaleFactor
-                });
+        public Task<ImageData> LoadImageData(byte[] contents) {
+            var img = Image.Load<Rgba32>(contents, out var format);
+            var samples = this.ResizeImage(img);
+            float scaleFactor = (float)img.Height / samples.Height;
+            return Task.FromResult(new ImageData(img) {
+                SampledImage = samples,
+                ScaleFactor = scaleFactor,
+                Format = format
+            });
         }
 
         // private (float Blue, float Green, float Red) GetAdjusted(ref Rgba32 pixel) {

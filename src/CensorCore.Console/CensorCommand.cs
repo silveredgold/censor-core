@@ -78,10 +78,13 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
                     AnsiConsole.MarkupLine($"Failed to load overrides from [grey]'{Path.GetFileName(settings.OverrideFilePath)}'[/]. Continuing with defaults...");
                 }
             }
+            var timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
             AnsiConsole.MarkupLine("Running censoring on image...");
             censoredResult = await cens.CensorImage(result, parser);
+            timer.Stop();
             if (censoredResult != null) {
-                AnsiConsole.MarkupLine("Censoring completed on image!");
+                AnsiConsole.MarkupLine($"Completed censoring image in [blue]{timer.Elapsed.TotalSeconds}[/]s!");
                 var outputFilePath = settings.OutputPath
                     ?? Path.Combine(Environment.CurrentDirectory, $"{Path.GetFileNameWithoutExtension(imagePath)}_censored.{censoredResult.MimeType.Split("/").Last()}");
                 await File.WriteAllBytesAsync(outputFilePath, censoredResult.ImageContents);

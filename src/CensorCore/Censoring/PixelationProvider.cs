@@ -15,7 +15,7 @@ namespace CensorCore.Censoring
             this._globalOpts = globalOpts;
         }
 
-        public Task<Image<Rgba32>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
+        public Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
         {
             var padding = inputImage.GetPadding(_globalOpts);
             var mask = new EffectMask(result.Box, padding);
@@ -24,9 +24,8 @@ namespace CensorCore.Censoring
                 x.Crop(cropRect);
                 x.Pixelate(GetPixelSize(Math.Max(result.Box.Height, result.Box.Width), level));
             });
-            mask.DrawMaskedEffect(inputImage, extract);
             
-            return Task.FromResult<Image<Rgba32>?>(null);
+            return Task.FromResult(mask.GetMutation(extract));
         }
 
         private int GetPixelSize(int dimension, int level) {

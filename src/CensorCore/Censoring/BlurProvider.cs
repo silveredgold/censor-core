@@ -16,7 +16,7 @@ namespace CensorCore.Censoring
         {
             _globalOpts = new GlobalCensorOptions();
         }
-        public Task<Image<Rgba32>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
+        public Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
         {
             var padding = inputImage.GetPadding(_globalOpts);
             var mask = new EffectMask(result.Box, padding);
@@ -27,12 +27,7 @@ namespace CensorCore.Censoring
                 x.Crop(cropRect);
                 x.GaussianBlur(level);
             });
-            mask.DrawMaskedEffect(inputImage, extract);
-            // var maskedCensor = mask.GetMaskedImage(extract);
-            // inputImage.Mutate(x => {
-            //         x.DrawImage(maskedCensor, new Point(Convert.ToInt32(result.Box.X-10), Convert.ToInt32(result.Box.Y-10)), 1);
-            //     });
-            return Task.FromResult<Image<Rgba32>?>(null);
+            return Task.FromResult(mask.GetMutation(extract));
         }
     }
 }

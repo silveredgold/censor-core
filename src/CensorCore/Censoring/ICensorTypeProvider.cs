@@ -1,7 +1,6 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-
-
+using SixLabors.ImageSharp.Processing;
 
 namespace CensorCore.Censoring
 {
@@ -25,6 +24,6 @@ namespace CensorCore.Censoring
         /// <param name="method">The requested method. Since the method will only be called if Supports() returns true, this can be used for additional parameters.</param>
         /// <param name="level">The censor "level", an integer value between 0 and 20 representing "severity" of the censoring. What this means is style-specific.</param>
         /// <returns>Either an image to be composited onto the main image (by the provider) or null, if the censoring is already completed.</returns>
-        Task<Image<Rgba32>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level);
+        Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level);
     }
 }
