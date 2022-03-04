@@ -63,6 +63,7 @@ namespace CensorCore.Censoring
         }
 
         public bool Supports(string censorType) => censorType.StartsWith("sticker");
+        public int Layer => 6;
 
         private bool CloseEnough(float stickerRatio, float targetRatio) {
             var diff = stickerRatio / targetRatio;

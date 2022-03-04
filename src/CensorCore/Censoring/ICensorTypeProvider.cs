@@ -16,6 +16,8 @@ namespace CensorCore.Censoring
             return censorType.Replace("Provider", string.Empty).Equals(typeName, StringComparison.InvariantCultureIgnoreCase);
         }
 
+        int Layer { get { return 0;} }
+
         /// <summary>
         /// Censors a single classification result in the given image.
         /// </summary>

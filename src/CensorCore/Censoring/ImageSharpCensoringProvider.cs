@@ -25,8 +25,8 @@ namespace CensorCore.Censoring
 
         public async Task<CensoredImage> CensorImage(ImageResult image, IResultParser? parser = null) {
             var img = image.ImageData.SourceImage;
-            var censorEffects = new List<Action<IImageProcessingContext>>();
-            foreach (var match in image.Results)
+            var censorEffects = new Dictionary<int, List<Action<IImageProcessingContext>>>();
+            foreach (var match in image.Results.OrderBy(r => r.Box.Width * r.Box.Height))
             {
                 var options = parser?.GetOptions(match, image) ?? this._parser?.GetOptions(match) ?? new ImageCensorOptions(nameof(BlurProvider)) { Level = 10 };
                 var provider = this._providers.FirstOrDefault(p => p.Supports(options.CensorType ?? string.Empty));
@@ -36,16 +36,22 @@ namespace CensorCore.Censoring
                     var censorMutation = await provider.CensorImage(img, match, options.CensorType, options.Level ?? 10);
                     if (censorMutation != null)
                     {
-                        censorEffects.Add(censorMutation);
+                        if (!censorEffects.ContainsKey(provider.Layer)) {
+                            censorEffects[provider.Layer] = new List<Action<IImageProcessingContext>>();
+                        }
+                        censorEffects[provider.Layer].Add(censorMutation);
                     }
                 }
             }
             if (censorEffects.Any()) {
                 img.Mutate(x =>
                 {
-                    foreach (var effect in censorEffects)
+                    foreach (var (layer, effects) in censorEffects.OrderBy(k => k.Key))
                     {
-                        effect?.Invoke(x);
+                        foreach (var effect in effects)
+                        {
+                            effect?.Invoke(x);
+                        }
                     }
                 });
             }

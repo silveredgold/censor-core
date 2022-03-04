@@ -24,6 +24,8 @@ namespace CensorCore.Censoring
             });
         }
 
+        public int Layer => 10;
+
         public bool Supports(string censorType) => censorType.Contains("bars") || censorType == "bb" || censorType.Contains("blackb");
     }
 }
