@@ -168,12 +168,20 @@ namespace CensorCore
             var boxes = rawBoxes.Chunk(4).ToList();
 
             for (int i = 0; i < length; i++) {
-                var confidence = rawScores.ElementAt(i);
-                var className = ClassList[rawLabels.ElementAt(i)];
-                if (confidence >= matchOptions.GetScoreForClass(className)) {
-                    var box = boxes.ElementAt(i).ToBox(imgData.ScaleFactor);
-                    results.Add(new Classification(box, confidence, className));
-                    // yield return new Classification(box, confidence, className);
+                var confidence = rawScores.ElementAtOrDefault(i);
+                string? className = null;
+                try {
+                    var classNameIndex = rawLabels.ElementAt(i);
+                    className = ClassList[classNameIndex];
+                } catch {
+                    //ignored since it's clearly fucked
+                }
+                if (confidence > 0 && !string.IsNullOrWhiteSpace(className) && boxes.Count > i) {
+                    if (confidence >= matchOptions.GetScoreForClass(className)) {
+                        var box = boxes.ElementAt(i).ToBox(imgData.ScaleFactor);
+                        results.Add(new Classification(box, confidence, className));
+                        // yield return new Classification(box, confidence, className);
+                    }
                 }
             }
             return results;
