@@ -33,8 +33,13 @@ namespace CensorCore
         public async Task<ImageData> LoadImage(string path)
         {
             if (path.StartsWith("data:")) {
-                var contents = Convert.FromBase64String(path);
-                return await LoadImageData(contents);
+                try {
+                    var encodedBytes = path.Split(',')[1];
+                    var contents = Convert.FromBase64String(encodedBytes);
+                    return await LoadImageData(contents);
+                } catch {
+                    throw new Exception("Invalid base64 data URI!");
+                }
             }
             if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri))
             {
