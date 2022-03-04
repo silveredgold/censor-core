@@ -28,9 +28,9 @@ namespace CensorCore.Censoring
             return Task.FromResult(mask.GetMutation(extract));
         }
 
-        private int GetPixelSize(int dimension, int level) {
+        private int GetPixelSize(int dimension, int level, int minimumSize = 5) {
             var inverted = 21-level;
-            return Convert.ToInt32(Math.Round((dimension/(Math.Max(inverted, 5))*0.75)*1));
+            return Math.Max(minimumSize, Convert.ToInt32(Math.Round((dimension/(Math.Max(inverted, 5))*0.75)*1)));
         }
 
         public bool Supports(string censorType) => censorType.ToLower().Contains("pixel");
