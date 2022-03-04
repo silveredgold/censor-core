@@ -32,6 +32,10 @@ namespace CensorCore
 
         public async Task<ImageData> LoadImage(string path)
         {
+            if (path.StartsWith("data:")) {
+                var contents = Convert.FromBase64String(path);
+                return await LoadImageData(contents);
+            }
             if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri))
             {
                 var contents = uri.IsFile
@@ -84,6 +88,30 @@ namespace CensorCore
             return Task.FromResult(new InputImage(data, image));
         }
 
+        public Task<InputImage<T>> LoadToTensor<T>(ImageData image, TensorLoadOptions<T> options) {
+            var img = image.SampledImage ?? image.SourceImage;
+            var origHeight = img.Height;
+            // img.CopyPixelDataTo(new Span<Rgba32>());
+            Tensor<T> data = new DenseTensor<T>(new[] {1, img.Height, img.Width, 3});
+            img.ProcessPixelRows(accessor =>
+            {
+                for (int y = 0; y < accessor.Height; y++)
+                {
+                    var pixelRow = accessor.GetRowSpan(y);
+
+                    for (int x = 0; x < pixelRow.Length; x++)
+                    {
+                        // Get a reference to the pixel at position x
+                        ref Rgba32 pixel = ref pixelRow[x];
+                        if (options.LoadPixel != null) {
+                            options.LoadPixel(data, ref pixel);
+                        }
+                    }
+                }
+            });
+            return Task.FromResult(new InputImage<T>(data, image));
+        }
+
         public Task<ImageData> LoadImageData(byte[] contents) {
             var img = Image.Load<Rgba32>(contents, out var format);
             var samples = this.ResizeImage(img);
@@ -94,11 +122,5 @@ namespace CensorCore
                 Format = format
             });
         }
-
-        // private (float Blue, float Green, float Red) GetAdjusted(ref Rgba32 pixel) {
-        //     var blue = pixel.B - 103.939F;
-        //     var 
-        //     return (pixel.B - 103.939)
-        // }
     }
 }

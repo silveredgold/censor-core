@@ -9,18 +9,25 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace CensorCore
 {
+    public interface IAIService {
+        bool Verbose { get; set; }
+        SessionOptions? Options { get; }
+
+        Task<ImageResult?> RunModel(byte[] data);
+        Task<ImageResult?> RunModel(string url);
+    }
+
     /// <summary>
     /// Main service type for interacting with the AI model. Responsible for setting up, configurating and executing the image classifier.
     /// </summary>
     /// <remarks>
     /// This service does not perform any censoring on the image.
     /// </remarks>
-    public class AIService
-    {
-        public static readonly string[] ClassList = new[] {"EXPOSED_ANUS", "EXPOSED_ARMPITS", "COVERED_BELLY", "EXPOSED_BELLY", "COVERED_BUTTOCKS", "EXPOSED_BUTTOCKS", "FACE_F", "FACE_M", "COVERED_FEET", "EXPOSED_FEET", "COVERED_BREAST_F", "EXPOSED_BREAST_F", "COVERED_GENITALIA_F", "EXPOSED_GENITALIA_F", "EXPOSED_BREAST_M", "EXPOSED_GENITALIA_M"};
+    public class AIService : IAIService {
+        public static readonly string[] ClassList = new[] { "EXPOSED_ANUS", "EXPOSED_ARMPITS", "COVERED_BELLY", "EXPOSED_BELLY", "COVERED_BUTTOCKS", "EXPOSED_BUTTOCKS", "FACE_F", "FACE_M", "COVERED_FEET", "EXPOSED_FEET", "COVERED_BREAST_F", "EXPOSED_BREAST_F", "COVERED_GENITALIA_F", "EXPOSED_GENITALIA_F", "EXPOSED_BREAST_M", "EXPOSED_GENITALIA_M" };
         private readonly InferenceSession _session;
         private readonly IImageHandler _imageHandler;
-        public bool Verbose {get;set;} = false;
+        public bool Verbose { get; set; } = false;
 
         private void Log(string message) {
             if (Verbose) {
@@ -28,18 +35,16 @@ namespace CensorCore
             }
         }
 
-        public SessionOptions Options => new SessionOptions()
-        {
+        public SessionOptions Options => new SessionOptions() {
             GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
         };
 
-        public static async Task<AIService> CreateFromFileAsync(string modelPath, IImageHandler imageHandler)
-        {
-            var opts = new SessionOptions()
-            {
+        public static async Task<AIService> CreateFromFileAsync(string modelPath, IImageHandler imageHandler) {
+            var opts = new SessionOptions() {
                 GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
             };
-            return await Task.Run(() => {
+            return await Task.Run(() =>
+            {
                 var session = new InferenceSession(modelPath, opts);
                 return new AIService(session, imageHandler);
             });
@@ -53,7 +58,7 @@ namespace CensorCore
                 while (hwSession == null && deviceId < 2) {
                     try {
                         var hwOpts = new SessionOptions() {
-                        
+
                         };
                         hwOpts.AppendExecutionProvider_DML(deviceId);
                         hwSession = new InferenceSession(model, hwOpts);
@@ -65,26 +70,22 @@ namespace CensorCore
                 }
                 Console.WriteLine("WARN: Failed to initialize hardware acceleration!");
             }
-            var opts = new SessionOptions()
-            {
+            var opts = new SessionOptions() {
                 GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL
             };
             var session = new InferenceSession(model, opts);
             return new AIService(session, imageHandler);
         }
-        public static AIService CreateFromFile(string modelPath, IImageHandler imageHandler)
-        {
+        public static AIService CreateFromFile(string modelPath, IImageHandler imageHandler) {
             return AIService.Create(File.ReadAllBytes(modelPath), imageHandler);
         }
 
-        public AIService(byte[] modelContents, IImageHandler imageHandler)
-        {
+        public AIService(byte[] modelContents, IImageHandler imageHandler) {
             this._session = new InferenceSession(modelContents, Options);
             this._imageHandler = imageHandler;
         }
 
-        private AIService(InferenceSession session, IImageHandler imageHandler)
-        {
+        private AIService(InferenceSession session, IImageHandler imageHandler) {
             this._session = session;
             this._imageHandler = imageHandler;
         }
@@ -101,9 +102,8 @@ namespace CensorCore
             }
             return result;
         }
-        
-        public async Task<ImageResult?> RunModel(string url)
-        {
+
+        public async Task<ImageResult?> RunModel(string url) {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImage(url);
@@ -167,8 +167,7 @@ namespace CensorCore
             var results = new List<Classification>();
             var boxes = rawBoxes.Chunk(4).ToList();
 
-            for (int i = 0; i < length; i++)
-            {
+            for (int i = 0; i < length; i++) {
                 var confidence = rawScores.ElementAt(i);
                 var className = ClassList[rawLabels.ElementAt(i)];
                 if (confidence >= matchOptions.GetScoreForClass(className)) {

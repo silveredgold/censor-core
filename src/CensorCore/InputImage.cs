@@ -24,4 +24,25 @@ namespace CensorCore
 
         ImageData Image { get; set; }
     }
+
+    /// <summary>
+    /// A simple utility type for the inputs required for classification.
+    /// </summary>
+    public class InputImage<T>
+    {
+        /// <summary>
+        /// The image data correctly formatted as a Tensor for model input.
+        /// </summary>
+        /// <value>The image data in Tensor form.</value>
+        /// <remarks>Any pixel/array/value manipulation should have been completed before now</remarks>
+        internal Tensor<T> Tensor { get; set; }
+
+        public InputImage(Tensor<T> tensor, ImageData image)
+        {
+            Tensor = tensor;
+            Image = image;
+        }
+
+        ImageData Image { get; set; }
+    }
 }
