@@ -3,6 +3,7 @@
         <DebugType>Embedded</DebugType>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
     </PropertyGroup>
     <PropertyGroup>
         <Authors>silveredgold</Authors>

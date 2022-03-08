@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CensorCore\CensorCore.csproj" />
     <ProjectReference Include="..\CensorCore.Shared\CensorCore.Shared.csproj" />
+    <ProjectReference Include="..\CensorCore.Runtime\CensorCore.Runtime.csproj" />
     <ProjectReference Include="..\CensorCore.ModelLoader\CensorCore.ModelLoader.csproj" />
   </ItemGroup>
 

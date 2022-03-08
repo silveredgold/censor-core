@@ -85,7 +85,7 @@ namespace CensorCore
             this._imageHandler = imageHandler;
         }
 
-        private AIService(InferenceSession session, IImageHandler imageHandler) {
+        public AIService(InferenceSession session, IImageHandler imageHandler) {
             this._session = session;
             this._imageHandler = imageHandler;
         }
