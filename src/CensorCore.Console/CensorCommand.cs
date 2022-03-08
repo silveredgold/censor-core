@@ -43,7 +43,7 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
 
         var handler = new ImageSharpHandler(1000, 1000);
         AnsiConsole.MarkupLine("Preparing AI service and censoring components");
-        var svc = AIService.Create(model, new ImageSharpHandler(1000, 1000), settings.EnableAcceleration);
+        var svc = Runtime.AIRuntime.CreateService(model, new ImageSharpHandler(1000,1000), settings.EnableAcceleration);
         if (settings.Verbose) {
             svc.Verbose = true;
         }

@@ -32,7 +32,7 @@ builder.Services.AddSingleton<AIService>(p => {
     if (model == null) {
         throw new InvalidOperationException("Could not load model from any available source!");
     }
-    return AIService.Create(model, p.GetRequiredService<IImageHandler>());
+    return CensorCore.Runtime.AIRuntime.CreateService(model, p.GetRequiredService<IImageHandler>());
 });
 
 builder.Services.AddSingleton<IAssetStore, EmptyAssetStore>();

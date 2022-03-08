@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../CensorCore.props" />
+  <ItemGroup>
+    <ProjectReference Include="..\CensorCore\CensorCore.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>CensorCore.Runtime</PackageId>
+    <PackageDescription>Highly experimental library to enable hardware-accelerated ONNX sessions with CensorCore.</PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'win-x64'" Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.10.0" />
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'linux-x64'" Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.10.0" />
+    <!-- <PackageReference Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win-x64'" Include="Microsoft.ML.OnnxRuntime" Version="1.10.0" /> -->
+  </ItemGroup>
+
+</Project>
