@@ -1,3 +1,4 @@
+using System.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -28,7 +29,7 @@ namespace CensorCore.Censoring
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
             var categories = GetCategories(method);
-            var sticker = await this._store.GetRandomImage(KnownAssetTypes.Stickers, boxRatio, categories);
+            var sticker = await GetImageAsync(boxRatio, categories);
             var mask = new EffectMask(result.Box, padding);
             var extract = inputImage.Clone(x => {
                 var cropRect = result.Box.ToRectangle().GetPadded(padding, inputImage);
@@ -62,13 +63,46 @@ namespace CensorCore.Censoring
             };
         }
 
-        public bool Supports(string censorType) => censorType.StartsWith("sticker");
-        public int Layer => 6;
+        private async Task<byte[]?> GetImageAsync(float? boxRatio, List<string>? categories) {
+            try {
+                var sticker = await this._store.GetRandomImage(KnownAssetTypes.Stickers, boxRatio, categories);
+                if (sticker is not null) {
+                    return sticker;
+                }
+            } catch (NotImplementedException) {
+                //ignored
+                //not all providers will implement this, and that's okay
+            }
+            try {
+                var allFiles = await this._store.GetImages(KnownAssetTypes.Stickers, categories);
+                var allImages = allFiles.Select<byte[], (byte[] ImageData, IImageInfo Image)>(fi => (ImageData: fi, Image: Image.Identify(fi)));
+                var ratioImages = allImages.Where(i =>
+                {
+                    var iRatio = i.Image.Width / i.Image.Height;
+                    return boxRatio == null ? true : CloseEnough(iRatio, boxRatio.Value);
+                });
+                if (ratioImages.Any())
+                {
+                    return ratioImages.Random().ImageData;
+                }
+                return null;
+            } catch {
+                return null;
+            }
 
-        private bool CloseEnough(float stickerRatio, float targetRatio) {
+        }
+
+        
+        private bool CloseEnough(float stickerRatio, float targetRatio)
+        {
             var diff = stickerRatio / targetRatio;
             return 0.75 <= diff && diff <= 1.25;
         }
+
+        public bool Supports(string censorType) => censorType.StartsWith("sticker");
+        public int Layer => 6;
+
+        
 
         private List<string>? GetCategories(string method) {
             List<string>? categories = null;

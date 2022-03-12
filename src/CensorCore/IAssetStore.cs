@@ -5,9 +5,14 @@ namespace CensorCore {
     public interface IAssetStore {
         Task<string?> GetRandomCaption(string? category);
         Task<byte[]?> GetRandomImage(string imageType, float? ratio, List<string>? category);
+        Task<IEnumerable<byte[]>> GetImages(string imageType, List<string>? category);
     }
 
     public class EmptyAssetStore : IAssetStore {
+        public Task<IEnumerable<byte[]>> GetImages(string imageType, List<string>? category) {
+            return Task.FromResult(Array.Empty<byte[]>().AsEnumerable());
+        }
+
         public Task<string?> GetRandomCaption(string? category) {
             return Task.FromResult<string?>(null);
         }
@@ -24,6 +29,16 @@ namespace CensorCore {
         {
             //just use beta safety stickers for debug purposes.
             this._imageRoot = @"X:\BetaSafety\BetaSafety-0.6.0.2\BetaSafety\browser-extension\images\stickers";
+        }
+
+        public Task<IEnumerable<byte[]>> GetImages(string imageType, List<string>? category) {
+            var allFiles = Directory.EnumerateFiles(this._imageRoot, "*", SearchOption.AllDirectories).ToList();
+            var allImages = allFiles.Select<string, (string FilePath, IImageInfo Image)>(fi => (FilePath: fi, Image: Image.Identify(fi)));
+            var ratioImages = allImages.Where(i =>
+            {
+                return true;
+            });
+            return Task.FromResult(ratioImages.Select(i => File.ReadAllBytes(i.FilePath)));
         }
 
         public Task<string?> GetRandomCaption(string? category)

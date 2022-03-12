@@ -54,6 +54,7 @@ public class ModelLoader {
         if (model != null && saveToSharedLocation) {
             try {
                 var tempPath = Path.Combine(Path.GetTempPath(), ".nudenet");
+                Directory.CreateDirectory(tempPath);
                 await File.WriteAllBytesAsync(Path.Combine(tempPath, model.Value.FileName), model.Value.ModelData);
             } catch {
                 //ignored
