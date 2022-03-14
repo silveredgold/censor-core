@@ -13,8 +13,8 @@ namespace CensorCore
         bool Verbose { get; set; }
         SessionOptions? Options { get; }
 
-        Task<ImageResult?> RunModel(byte[] data);
-        Task<ImageResult?> RunModel(string url);
+        Task<ImageResult?> RunModel(byte[] data, MatchOptions? options = null);
+        Task<ImageResult?> RunModel(string url, MatchOptions? options = null);
     }
 
     /// <summary>
@@ -90,33 +90,34 @@ namespace CensorCore
             this._imageHandler = imageHandler;
         }
 
-        public async Task<ImageResult?> RunModel(byte[] data) {
+        public async Task<ImageResult?> RunModel(byte[] data, MatchOptions? options = null) {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImageData(data);
             timer.Stop();
             Log($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
-            var result = await RunModelForImage(imageData);
+            var result = await RunModelForImage(imageData, options);
             if (result != null && result.Session != null) {
                 result.Session.ImageLoadTime = timer.Elapsed;
             }
             return result;
         }
 
-        public async Task<ImageResult?> RunModel(string url) {
+        public async Task<ImageResult?> RunModel(string url, MatchOptions? options = null) {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImage(url);
             timer.Stop();
             Log($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
-            var result = await RunModelForImage(imageData);
+            var result = await RunModelForImage(imageData, options);
             if (result != null && result.Session != null) {
                 result.Session.ImageLoadTime = timer.Elapsed;
             }
             return result;
         }
 
-        private async Task<ImageResult?> RunModelForImage(ImageData imageData) {
+        private async Task<ImageResult?> RunModelForImage(ImageData imageData, MatchOptions? options) {
+            options ??= MatchOptions.GetDefault();
             var timer = new System.Diagnostics.Stopwatch();
             timer.Restart();
             var modelInput = await this._imageHandler.LoadToTensor(imageData);
@@ -129,7 +130,7 @@ namespace CensorCore
             var runTime = timer.Elapsed;
             Log($"Finished model in {timer.Elapsed.TotalSeconds}s");
             timer.Restart();
-            var classifications = this.GetResults(imageData, output.ToList(), MatchOptions.GetDefault()).ToList();
+            var classifications = this.GetResults(imageData, output.ToList(), options).ToList();
             var modelName = string.IsNullOrWhiteSpace(this._session.ModelMetadata.Description)
                 ? this._session.ModelMetadata.GraphName
                 : this._session.ModelMetadata.Description;
