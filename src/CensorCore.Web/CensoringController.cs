@@ -19,8 +19,14 @@ public class CensoringController : ControllerBase
 
     [HttpGet("info")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetInfo() {
-        return Ok(new {version = CoreManager.GetCoreVersion()});
+    public IActionResult GetInfo([FromServices]IImageHandler imageHandler, [FromServices]IEnumerable<CensorCore.Censoring.ICensorTypeProvider> types, [FromServices]GlobalCensorOptions? options = null) {
+        return Ok(new {
+            version = CoreManager.GetCoreVersion(),
+            imageHandler = imageHandler.GetType().Name,
+            provider = _censor.GetType().Name,
+            types = types.Select(t => t.GetType().Name.Replace("Provider", string.Empty)).ToArray(),
+            options = options,
+        });
     }
 
 
