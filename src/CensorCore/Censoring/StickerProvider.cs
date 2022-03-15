@@ -66,26 +66,26 @@ namespace CensorCore.Censoring
         private async Task<byte[]?> GetImageAsync(float? boxRatio, List<string>? categories) {
             try {
                 var sticker = await this._store.GetRandomImage(KnownAssetTypes.Stickers, boxRatio, categories);
-                if (sticker is not null) {
-                    return sticker.RawData;
-                }
+                return sticker?.RawData;
             } catch (NotImplementedException) {
                 //ignored
                 //not all providers will implement this, and that's okay
             }
             try {
                 var allFiles = await this._store.GetImages(KnownAssetTypes.Stickers, categories);
-                var allImages = allFiles.Select<RawImageData, (byte[] ImageData, IImageInfo Image)>(fi => (ImageData: fi.RawData, Image: Image.Identify(fi.RawData)));
-                var ratioImages = allImages.Where(i =>
+                RawImageData? validImage = null;
+                var resultCount = allFiles.Count();
+                //if we pull _80%_ of the total elements by random and they don't match, we're probably not going to find one.
+                for (int i = 0; i < resultCount / 1.25 && validImage == null; i++)
                 {
-                    var iRatio = i.Image.Width / i.Image.Height;
-                    return boxRatio == null ? true : CloseEnough(iRatio, boxRatio.Value);
-                });
-                if (ratioImages.Any())
-                {
-                    return ratioImages.Random().ImageData;
+                    var candidate = allFiles.Random(resultCount);
+                    var img = Image.Identify(candidate.RawData, out var format);
+                    var iRatio = img.Width / img.Height;
+                    if (boxRatio == null || CloseEnough(iRatio, boxRatio.Value)) {
+                        validImage = new RawImageData(candidate.RawData, format.DefaultMimeType);
+                    }
                 }
-                return null;
+                return validImage?.RawData;
             } catch {
                 return null;
             }

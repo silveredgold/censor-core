@@ -17,9 +17,9 @@ namespace CensorCore {
             return nearest;
         }
 
-        public static T Random<T>(this IEnumerable<T> input)
+        public static T Random<T>(this IEnumerable<T> input, int? count = null)
         {
-            return input.ElementAt(Rand.Next(input.Count()));
+            return input.ElementAt(Rand.Next(count ?? input.Count()));
         }
 
     }

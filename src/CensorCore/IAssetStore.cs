@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace CensorCore {
 
-    public record RawImageData(string MimeType, byte[] RawData) { }
+    public record RawImageData(byte[] RawData, string? MimeType = null) { }
     public interface IAssetStore {
         Task<string?> GetRandomCaption(string? category);
         Task<RawImageData?> GetRandomImage(string imageType, float? ratio, List<string>? category);
@@ -41,7 +41,7 @@ namespace CensorCore {
             {
                 return true;
             });
-            return Task.FromResult(ratioImages.Select(i => new RawImageData(i.Format.DefaultMimeType, File.ReadAllBytes(i.FilePath))));
+            return Task.FromResult(ratioImages.Select(i => new RawImageData(File.ReadAllBytes(i.FilePath), i.Format.DefaultMimeType)));
         }
 
         public Task<string?> GetRandomCaption(string? category)
@@ -62,7 +62,7 @@ namespace CensorCore {
             {
                 var selected = ratioImages.Random();
                 var bytes = await File.ReadAllBytesAsync(selected.FilePath);
-                return new RawImageData(selected.Format.DefaultMimeType, bytes);
+                return new RawImageData(bytes, selected.Format.DefaultMimeType);
             }
             return null;
         }
