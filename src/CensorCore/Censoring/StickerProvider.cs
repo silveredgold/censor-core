@@ -67,7 +67,7 @@ namespace CensorCore.Censoring
             try {
                 var sticker = await this._store.GetRandomImage(KnownAssetTypes.Stickers, boxRatio, categories);
                 if (sticker is not null) {
-                    return sticker;
+                    return sticker.RawData;
                 }
             } catch (NotImplementedException) {
                 //ignored
@@ -75,7 +75,7 @@ namespace CensorCore.Censoring
             }
             try {
                 var allFiles = await this._store.GetImages(KnownAssetTypes.Stickers, categories);
-                var allImages = allFiles.Select<byte[], (byte[] ImageData, IImageInfo Image)>(fi => (ImageData: fi, Image: Image.Identify(fi)));
+                var allImages = allFiles.Select<RawImageData, (byte[] ImageData, IImageInfo Image)>(fi => (ImageData: fi.RawData, Image: Image.Identify(fi.RawData)));
                 var ratioImages = allImages.Where(i =>
                 {
                     var iRatio = i.Image.Width / i.Image.Height;

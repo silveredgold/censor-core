@@ -1,24 +1,27 @@
 using CensorCore.Censoring;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 
 namespace CensorCore {
+
+    public record RawImageData(string MimeType, byte[] RawData) { }
     public interface IAssetStore {
         Task<string?> GetRandomCaption(string? category);
-        Task<byte[]?> GetRandomImage(string imageType, float? ratio, List<string>? category);
-        Task<IEnumerable<byte[]>> GetImages(string imageType, List<string>? category);
+        Task<RawImageData?> GetRandomImage(string imageType, float? ratio, List<string>? category);
+        Task<IEnumerable<RawImageData>> GetImages(string imageType, List<string>? category);
     }
 
     public class EmptyAssetStore : IAssetStore {
-        public Task<IEnumerable<byte[]>> GetImages(string imageType, List<string>? category) {
-            return Task.FromResult(Array.Empty<byte[]>().AsEnumerable());
+        public Task<IEnumerable<RawImageData>> GetImages(string imageType, List<string>? category) {
+            return Task.FromResult(Array.Empty<RawImageData>().AsEnumerable());
         }
 
         public Task<string?> GetRandomCaption(string? category) {
             return Task.FromResult<string?>(null);
         }
 
-        public Task<byte[]?> GetRandomImage(string imageType, float? ratio, List<string>? category) {
-            return Task.FromResult<byte[]?>(null);
+        public Task<RawImageData?> GetRandomImage(string imageType, float? ratio, List<string>? category) {
+            return Task.FromResult<RawImageData?>(null);
         }
     }
 
@@ -31,14 +34,14 @@ namespace CensorCore {
             this._imageRoot = @"X:\BetaSafety\BetaSafety-0.6.0.2\BetaSafety\browser-extension\images\stickers";
         }
 
-        public Task<IEnumerable<byte[]>> GetImages(string imageType, List<string>? category) {
+        public Task<IEnumerable<RawImageData>> GetImages(string imageType, List<string>? category) {
             var allFiles = Directory.EnumerateFiles(this._imageRoot, "*", SearchOption.AllDirectories).ToList();
-            var allImages = allFiles.Select<string, (string FilePath, IImageInfo Image)>(fi => (FilePath: fi, Image: Image.Identify(fi)));
+            var allImages = allFiles.Select<string, (string FilePath, IImageInfo Image, IImageFormat Format)>(fi => (FilePath: fi, Image: Image.Identify(fi, out var format), Format: format));
             var ratioImages = allImages.Where(i =>
             {
                 return true;
             });
-            return Task.FromResult(ratioImages.Select(i => File.ReadAllBytes(i.FilePath)));
+            return Task.FromResult(ratioImages.Select(i => new RawImageData(i.Format.DefaultMimeType, File.ReadAllBytes(i.FilePath))));
         }
 
         public Task<string?> GetRandomCaption(string? category)
@@ -46,10 +49,10 @@ namespace CensorCore {
             return Task.FromResult<string?>(null);
         }
 
-        public async Task<byte[]?> GetRandomImage(string imageType, float? ratio, List<string>? category)
+        public async Task<RawImageData?> GetRandomImage(string imageType, float? ratio, List<string>? category)
         {
             var allFiles = Directory.EnumerateFiles(this._imageRoot, "*", SearchOption.AllDirectories).ToList();
-            var allImages = allFiles.Select<string, (string FilePath, IImageInfo Image)>(fi => (FilePath: fi, Image: Image.Identify(fi)));
+            var allImages = allFiles.Select<string, (string FilePath, IImageInfo Image, IImageFormat Format)>(fi => (FilePath: fi, Image: Image.Identify(fi, out var format), Format: format));
             var ratioImages = allImages.Where(i =>
             {
                 var iRatio = i.Image.Width / i.Image.Height;
@@ -57,8 +60,9 @@ namespace CensorCore {
             });
             if (ratioImages.Any())
             {
-                var selected = ratioImages.Random().FilePath;
-                return await File.ReadAllBytesAsync(selected);
+                var selected = ratioImages.Random();
+                var bytes = await File.ReadAllBytesAsync(selected.FilePath);
+                return new RawImageData(selected.Format.DefaultMimeType, bytes);
             }
             return null;
         }
