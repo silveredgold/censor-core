@@ -12,15 +12,6 @@ namespace CensorCore
             return new Rectangle(Convert.ToInt32(box.X), Convert.ToInt32(box.Y), box.Width, box.Height);
         }
 
-        internal static BoundingBox ScaleBy(this BoundingBox box, float amountX, float amountY)
-        {
-            box.X = box.X - amountX;
-            box.Y = box.Y - amountY;
-            box.Height = Convert.ToInt32(box.Height + (2 * amountY));
-            box.Width = Convert.ToInt32(box.Width + (2 * amountX));
-            return box;
-        }
-
         public static Rectangle GetPadded(this Rectangle rect, int padAmount = 10)
         {
             return new Rectangle(rect.X - padAmount, rect.Y - padAmount, rect.Width + (2 * padAmount), rect.Height + (2 * padAmount));

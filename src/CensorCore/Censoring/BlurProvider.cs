@@ -25,7 +25,7 @@ namespace CensorCore.Censoring
                 // System.Console.WriteLine($"H: {inputImage.Height} || W: {inputImage.Width}");
                 // System.Console.WriteLine($"eY: {cropRect.Y+cropRect.Height} || W: {cropRect.X+cropRect.Width}");
                 x.Crop(cropRect);
-                x.GaussianBlur(level);
+                x.GaussianBlur(level * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height)/100)));
             });
             return Task.FromResult(mask.GetMutation(extract));
         }

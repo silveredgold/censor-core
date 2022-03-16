@@ -12,46 +12,31 @@ namespace CensorCore.Censoring
     }
 
     public class ImageSharpCensoringProvider : ICensoringProvider {
+        private readonly IEnumerable<IResultsTransformer> _transformers;
+        private readonly GlobalCensorOptions _options;
         private readonly IEnumerable<ICensorTypeProvider> _providers;
         private readonly IResultParser? _parser;
 
-        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers, IResultParser parser) : this(providers) {
-            this._parser = parser;
+        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers, IResultParser parser, GlobalCensorOptions? options = null, IEnumerable<IResultsTransformer>? transformers = null) : this(providers, options, transformers) {
+            _parser = parser;
         }
 
-        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers) {
-            this._providers = providers;
+        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers, GlobalCensorOptions? options = null, IEnumerable<IResultsTransformer>? transformers = null) {
+            _transformers = transformers ?? new List<IResultsTransformer>();
+            _options = options ?? new GlobalCensorOptions();
+            _providers = providers;
         }
 
         public async Task<CensoredImage> CensorImage(ImageResult image, IResultParser? parser = null) {
             var img = image.ImageData.SourceImage;
             var censorEffects = new Dictionary<int, List<Action<IImageProcessingContext>>>();
-            var matches = image.Results.GroupBy(r => r.Label).ToList();
-            var transformedMatches = new List<Classification>();
-            foreach (var labelGroup in matches)
+            // var matches = image.Results.GroupBy(r => r.Label).ToList();
+            IEnumerable<Classification> transformedMatches = image.Results;
+            if (_transformers.Any() && (_options.AllowTransformers ?? true))
             {
-                if (labelGroup.Count() > 1 && labelGroup.All(r => labelGroup.Any(l => r.Box.ToRectangle().IntersectsWith(l.Box.ToRectangle())))) {
-                    foreach (var pair in labelGroup.Chunk(2))
-                    {
-                        if (pair.Count() < 2) {
-                            transformedMatches.Add(pair.First());
-                        }
-                        var rectA = pair.First().Box.ToRectangle();
-                        var rectB = pair.Last().Box.ToRectangle();
-                        var rejections = new List<Predicate<Rectangle>>() {
-                            r => r.Width > rectA.Width * 2F && r.Width > rectB.Width *2F,
-                            r => r.Height > rectA.Height * 2F && r.Height > rectB.Height*2F
-                        };
-                        var unionRect = Rectangle.Union(rectA, rectB);
-                        if (!rejections.All(r => r(unionRect))) {
-
-                            transformedMatches.Add(
-                                new Classification(
-                                    new BoundingBox(unionRect.X, unionRect.Y, unionRect.X+unionRect.Width, unionRect.Y+unionRect.Height), Math.Max(pair.First().Confidence, pair.Last().Confidence), labelGroup.Key));
-                        }
-                    }
-                } else {
-                    transformedMatches.AddRange(labelGroup);
+                foreach (var transformer in _transformers)
+                {
+                    transformedMatches = transformer.TransformResults(transformedMatches);
                 }
             }
             foreach (var match in transformedMatches.OrderBy(r => r.Box.Width * r.Box.Height))

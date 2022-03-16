@@ -30,7 +30,7 @@ namespace CensorCore.Censoring {
             var extract = inputImage.Clone(x =>
             {
                 x.Crop(cropRect);
-                x.GaussianBlur(Math.Max(level, 10) * 2.5F);
+                x.GaussianBlur(Math.Max(level, 10) * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height)/100)));
             });
             mutations.Add(mask.GetMutation(extract));
             if (caption != null) {

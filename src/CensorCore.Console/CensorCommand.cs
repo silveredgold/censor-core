@@ -52,7 +52,8 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         var bars = new BlackBarProvider();
         var stickers = new StickerProvider(new EmptyAssetStore());
         var caption = new CaptionProvider(new EmptyAssetStore());
-        var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption });
+        var transformers = new IResultsTransformer[] {new CensorScaleTransformer(new GlobalCensorOptions {RelativeCensorScale = 1F}), new IntersectingMatchMerger() };
+        var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption }, transformers: settings.NoTransformers ? Array.Empty<IResultsTransformer>() : transformers);
 
         AnsiConsole.MarkupLine("Invoking model...");
         var result = await svc.RunModel(imagePath);
@@ -202,6 +203,11 @@ public class CensoringSettings : CommandSettings {
     [Description("Attempts to enable DirectML hardware acceleration. Use with caution.")]
     [DefaultValue(false)]
     public bool EnableAcceleration { get; set; }
+
+    [CommandOption("--no-transformers")]
+    [Description("Disables the default results transformers. Censors the image exactly as it comes from the classifier.")]
+    [DefaultValue(false)]
+    public bool NoTransformers {get;set;}
 }
 
 

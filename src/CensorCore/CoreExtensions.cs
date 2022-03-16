@@ -22,5 +22,14 @@ namespace CensorCore {
             return input.ElementAt(Rand.Next(count ?? input.Count()));
         }
 
+        internal static BoundingBox ScaleBy(this BoundingBox box, float amountX, float amountY)
+        {
+            box.X = box.X - amountX;
+            box.Y = box.Y - amountY;
+            box.Height = Convert.ToInt32(box.Height + (2 * amountY));
+            box.Width = Convert.ToInt32(box.Width + (2 * amountX));
+            return box;
+        }
+
     }
 }
