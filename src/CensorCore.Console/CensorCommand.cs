@@ -51,7 +51,8 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         var pixel = new PixelationProvider();
         var bars = new BlackBarProvider();
         var stickers = new StickerProvider(new EmptyAssetStore());
-        var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers });
+        var caption = new CaptionProvider(new EmptyAssetStore());
+        var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption });
 
         AnsiConsole.MarkupLine("Invoking model...");
         var result = await svc.RunModel(imagePath);

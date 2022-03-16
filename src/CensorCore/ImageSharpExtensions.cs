@@ -41,6 +41,11 @@ namespace CensorCore
             return new Point(Convert.ToInt32(box.X + (box.Width / 2)), Convert.ToInt32(box.Y + (box.Height / 2)));
         }
 
+        public static Point GetCenter(this Rectangle rect)
+        {
+            return new Point(Convert.ToInt32(rect.X + (rect.Width / 2)), Convert.ToInt32(rect.Y + (rect.Height / 2)));
+        }
+
         public static PointF GetCenter(this Image i) {
             return new PointF(i.Width/2, i.Height/2);
         }
