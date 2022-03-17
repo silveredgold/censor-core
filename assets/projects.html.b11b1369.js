@@ -1,1 +1,0 @@
-const e={key:"v-3ac5ce46",path:"/projects.html",title:"Project Structure",lang:"en-US",frontmatter:{title:"Project Structure"},excerpt:"",headers:[],git:{updatedTime:1647491189e3,contributors:[{name:"Silvered Gold",email:"35001040+silveredgold@users.noreply.github.com",commits:1}]},filePathRelative:"projects.md"};export{e as data};
