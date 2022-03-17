@@ -1,0 +1,1 @@
+const e={key:"v-646b6f91",path:"/usage.html",title:"Developer Guide",lang:"en-US",frontmatter:{title:"Developer Guide"},excerpt:"",headers:[{level:3,title:"Build",slug:"build",children:[]}],git:{updatedTime:1647491189e3,contributors:[{name:"Silvered Gold",email:"35001040+silveredgold@users.noreply.github.com",commits:1}]},filePathRelative:"usage.md"};export{e as data};
