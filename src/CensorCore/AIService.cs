@@ -9,12 +9,12 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace CensorCore
 {
-    public interface IAIService {
+    public interface IAIService<TMatch>{
         bool Verbose { get; set; }
         SessionOptions? Options { get; }
 
-        Task<ImageResult?> RunModel(byte[] data, MatchOptions? options = null);
-        Task<ImageResult?> RunModel(string url, MatchOptions? options = null);
+        Task<ImageResult<TMatch>?> RunModel(byte[] data, MatchOptions? options = null);
+        Task<ImageResult<TMatch>?> RunModel(string url, MatchOptions? options = null);
     }
 
     /// <summary>
@@ -23,7 +23,7 @@ namespace CensorCore
     /// <remarks>
     /// This service does not perform any censoring on the image.
     /// </remarks>
-    public class AIService : IAIService {
+    public class AIService {
         public static readonly string[] ClassList = new[] { "EXPOSED_ANUS", "EXPOSED_ARMPITS", "COVERED_BELLY", "EXPOSED_BELLY", "COVERED_BUTTOCKS", "EXPOSED_BUTTOCKS", "FACE_F", "FACE_M", "COVERED_FEET", "EXPOSED_FEET", "COVERED_BREAST_F", "EXPOSED_BREAST_F", "COVERED_GENITALIA_F", "EXPOSED_GENITALIA_F", "EXPOSED_BREAST_M", "EXPOSED_GENITALIA_M" };
         private readonly InferenceSession _session;
         private readonly IImageHandler _imageHandler;
@@ -120,7 +120,8 @@ namespace CensorCore
             options ??= MatchOptions.GetDefault();
             var timer = new System.Diagnostics.Stopwatch();
             timer.Restart();
-            var modelInput = await this._imageHandler.LoadToTensor(imageData);
+            // var modelInput = await this._imageHandler.LoadToTensor(imageData);
+            var modelInput = await this._imageHandler.LoadToTensor<float>(imageData, new NudeNetLoadOptions());
             timer.Stop();
             var tensorLoadTime = timer.Elapsed;
             Log($"Loaded tensor data in {timer.Elapsed.TotalSeconds}s");
@@ -145,7 +146,7 @@ namespace CensorCore
             return result;
         }
 
-        private IEnumerable<NamedOnnxValue> GetFeeds(InputImage input) {
+        private IEnumerable<NamedOnnxValue> GetFeeds(InputImage<float> input) {
             return this._session.InputMetadata.Select(im => NamedOnnxValue.CreateFromTensor<float>(im.Key, input.Tensor));
         }
 

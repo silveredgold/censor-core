@@ -31,5 +31,25 @@ namespace CensorCore {
             return box;
         }
 
+        internal static bool ContainsAny(this string src, params string[] options) {
+            foreach (var opt in options)
+            {
+                if (src.Contains(opt)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        internal static bool ContainsAny(this string src, StringComparison comparison, params string[] options) {
+            foreach (var opt in options)
+            {
+                if (src.Contains(opt, comparison)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 }

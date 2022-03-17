@@ -53,7 +53,8 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         var stickers = new StickerProvider(new EmptyAssetStore());
         var caption = new CaptionProvider(new EmptyAssetStore());
         var transformers = new IResultsTransformer[] {new CensorScaleTransformer(new GlobalCensorOptions {RelativeCensorScale = 1F}), new IntersectingMatchMerger() };
-        var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption }, transformers: settings.NoTransformers ? Array.Empty<IResultsTransformer>() : transformers);
+        var middleware = new ICensoringMiddleware[] { new FacialFeaturesMiddleware()};
+        var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption }, transformers: settings.NoTransformers ? Array.Empty<IResultsTransformer>() : transformers, middlewares: middleware);
 
         AnsiConsole.MarkupLine("Invoking model...");
         var result = await svc.RunModel(imagePath);
@@ -151,7 +152,7 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         return chart;
     }
 
-    private Tree GetTree(ImageResult imageResult, string inputName) {
+    private Tree GetTree(ImageResult<Classification> imageResult, string inputName) {
         var tree = new Tree(inputName);
         var grouped = imageResult.Results.GroupBy(r => r.Label);
         foreach (var group in grouped)

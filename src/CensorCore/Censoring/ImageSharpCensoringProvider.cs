@@ -15,23 +15,31 @@ namespace CensorCore.Censoring
         private readonly IEnumerable<IResultsTransformer> _transformers;
         private readonly GlobalCensorOptions _options;
         private readonly IEnumerable<ICensorTypeProvider> _providers;
+        private readonly IEnumerable<ICensoringMiddleware> _middlewares;
         private readonly IResultParser? _parser;
 
-        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers, IResultParser parser, GlobalCensorOptions? options = null, IEnumerable<IResultsTransformer>? transformers = null) : this(providers, options, transformers) {
+        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers, IResultParser parser, GlobalCensorOptions? options = null, IEnumerable<IResultsTransformer>? transformers = null, IEnumerable<ICensoringMiddleware>? middlewares = null) : this(providers, options, transformers, middlewares) {
             _parser = parser;
         }
 
-        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers, GlobalCensorOptions? options = null, IEnumerable<IResultsTransformer>? transformers = null) {
+        public ImageSharpCensoringProvider(IEnumerable<ICensorTypeProvider> providers, GlobalCensorOptions? options = null, IEnumerable<IResultsTransformer>? transformers = null, IEnumerable<ICensoringMiddleware>? middlewares = null) {
             _transformers = transformers ?? new List<IResultsTransformer>();
             _options = options ?? new GlobalCensorOptions();
             _providers = providers;
+            _middlewares = middlewares ?? new List<ICensoringMiddleware>();
         }
 
         public async Task<CensoredImage> CensorImage(ImageResult image, IResultParser? parser = null) {
+            parser = parser ?? this._parser;
             var img = image.ImageData.SourceImage;
             var censorEffects = new Dictionary<int, List<Action<IImageProcessingContext>>>();
             // var matches = image.Results.GroupBy(r => r.Label).ToList();
             IEnumerable<Classification> transformedMatches = image.Results;
+
+            foreach (var middleware in _middlewares)
+            {
+                await middleware.Prepare();
+            }
             if (_transformers.Any() && (_options.AllowTransformers ?? true))
             {
                 foreach (var transformer in _transformers)
@@ -39,9 +47,18 @@ namespace CensorCore.Censoring
                     transformedMatches = transformer.TransformResults(transformedMatches);
                 }
             }
+            if (_middlewares.Any()) {
+                foreach (var middleware in _middlewares)
+                {
+                    var additionalResults = await middleware.OnBeforeCensoring(image, parser, AddCensor);
+                    if (additionalResults != null) {
+                        transformedMatches = transformedMatches.Concat(additionalResults);
+                    }
+                }
+            }
             foreach (var match in transformedMatches.OrderBy(r => r.Box.Width * r.Box.Height))
             {
-                var options = parser?.GetOptions(match, image) ?? this._parser?.GetOptions(match) ?? new ImageCensorOptions(nameof(BlurProvider)) { Level = 10 };
+                var options = parser?.GetOptions(match, image) ?? new ImageCensorOptions(nameof(BlurProvider)) { Level = 10 };
                 var provider = this._providers.FirstOrDefault(p => p.Supports(options.CensorType ?? string.Empty));
                 if (provider != null)
                 {
@@ -49,10 +66,7 @@ namespace CensorCore.Censoring
                     var censorMutation = await provider.CensorImage(img, match, options.CensorType, options.Level ?? 10);
                     if (censorMutation != null)
                     {
-                        if (!censorEffects.ContainsKey(provider.Layer)) {
-                            censorEffects[provider.Layer] = new List<Action<IImageProcessingContext>>();
-                        }
-                        censorEffects[provider.Layer].Add(censorMutation);
+                        AddCensor(provider.Layer, censorMutation);
                     }
                 }
             }
@@ -68,6 +82,10 @@ namespace CensorCore.Censoring
                     }
                 });
             }
+            foreach (var middleware in _middlewares)
+            {
+                await middleware.OnAfterCensoring(img);
+            }
             // await img.SaveAsPngAsync("./censored-result-2.png");
             using (var ms = new MemoryStream())
             {
@@ -80,6 +98,14 @@ namespace CensorCore.Censoring
                     return new CensoredImage(ms.ToArray(), "image/png", img.ToBase64String(PngFormat.Instance));
                 }
                 
+            }
+            void AddCensor(int layer, Action<IImageProcessingContext> mutation) {
+                if (censorEffects != null) {
+                if (!censorEffects.ContainsKey(layer)) {
+                            censorEffects[layer] = new List<Action<IImageProcessingContext>>();
+                        }
+                        censorEffects[layer].Add(mutation);
+                }
             }
         }
     }

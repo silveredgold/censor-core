@@ -97,7 +97,7 @@ namespace CensorCore
             var img = image.SampledImage ?? image.SourceImage;
             var origHeight = img.Height;
             // img.CopyPixelDataTo(new Span<Rgba32>());
-            Tensor<T> data = new DenseTensor<T>(new[] {1, img.Height, img.Width, 3});
+            Tensor<T> data = new DenseTensor<T>(options.Dimensions(img));
             img.ProcessPixelRows(accessor =>
             {
                 for (int y = 0; y < accessor.Height; y++)
@@ -109,7 +109,7 @@ namespace CensorCore
                         // Get a reference to the pixel at position x
                         ref Rgba32 pixel = ref pixelRow[x];
                         if (options.LoadPixel != null) {
-                            options.LoadPixel(data, ref pixel);
+                            options.LoadPixel(data, new Point(x, y), ref pixel);
                         }
                     }
                 }
@@ -126,6 +126,48 @@ namespace CensorCore
                 ScaleFactor = scaleFactor,
                 Format = format
             });
+        }
+    }
+
+    public class NudeNetLoadOptions : TensorLoadOptions<float> {
+        public NudeNetLoadOptions() : base(img => new[] {1, img.Height, img.Width, 3}) {
+            LoadPixel = LoadNudeNetPixels;
+        }
+
+        private void LoadNudeNetPixels(Tensor<float> data, Point point, ref Rgba32 pixel) {
+            var y = point.Y;
+            var x = point.X;
+            data[0, y, x, 0] = pixel.B - 103.939F;
+            data[0, y, x, 1] = pixel.G - 116.779F;
+            data[0, y, x, 2] = pixel.R - 123.68F;
+        }
+    }
+
+    public class FaceDetectionLoadOptions : TensorLoadOptions<float> {
+        public FaceDetectionLoadOptions() : base(img => new[] {1, 3, img.Height, img.Width}) {
+            LoadPixel = LoadLandmarkPixels;
+        }
+
+        private void LoadLandmarkPixels(Tensor<float> data, Point point, ref Rgba32 pixel) {
+            var y = point.Y;
+            var x = point.X;
+            data[0, 0, y, x] = (pixel.B - 127F)/128;
+            data[0, 1, y, x] = (pixel.G - 127F)/128;
+            data[0, 2, y, x] = (pixel.R - 127F)/128;
+        }
+    }
+
+    public class LandmarksLoadOptions : TensorLoadOptions<float> {
+        public LandmarksLoadOptions() : base(img => new[] {1, 3, 112, 112}) {
+            LoadPixel = LoadLandmarkPixels;
+        }
+
+        private void LoadLandmarkPixels(Tensor<float> data, Point point, ref Rgba32 pixel) {
+            var y = point.Y;
+            var x = point.X;
+            data[0, 0, y, x] = pixel.B / 255F;
+            data[0, 1, y, x] = pixel.G / 255F;
+            data[0, 2, y, x] = pixel.R / 255F;
         }
     }
 }

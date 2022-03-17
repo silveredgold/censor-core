@@ -34,8 +34,8 @@ public class OverrideFileParser : IResultParser {
         }
     }
 
-    public ImageCensorOptions GetOptions(Classification result, ImageResult? image = null) {
-        if (_overrides != null && _overrides.TryGetValue(result.Label, out var overrideResult)) {
+    public ImageCensorOptions? GetOptions(string label, ImageResult? image = null) {
+        if (_overrides != null && _overrides.TryGetValue(label, out var overrideResult)) {
             return new ImageCensorOptions(overrideResult.First(), overrideResult.Count > 1 ? int.TryParse(overrideResult[1], out var oLevel) ? oLevel : 10 : 10);
         }
         return _defaults;
