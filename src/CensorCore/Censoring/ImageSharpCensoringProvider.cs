@@ -50,9 +50,13 @@ namespace CensorCore.Censoring
             if (_middlewares.Any()) {
                 foreach (var middleware in _middlewares)
                 {
-                    var additionalResults = await middleware.OnBeforeCensoring(image, parser, AddCensor);
-                    if (additionalResults != null) {
-                        transformedMatches = transformedMatches.Concat(additionalResults);
+                    try {
+                        var additionalResults = await middleware.OnBeforeCensoring(image, parser, AddCensor);
+                        if (additionalResults != null) {
+                            transformedMatches = transformedMatches.Concat(additionalResults);
+                        }
+                    } catch {
+                        //ignored
                     }
                 }
             }
@@ -84,7 +88,11 @@ namespace CensorCore.Censoring
             }
             foreach (var middleware in _middlewares)
             {
-                await middleware.OnAfterCensoring(img);
+                try {
+                    await middleware.OnAfterCensoring(img);
+                } catch {
+                    //ignored
+                }
             }
             // await img.SaveAsPngAsync("./censored-result-2.png");
             using (var ms = new MemoryStream())

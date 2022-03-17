@@ -51,5 +51,10 @@ namespace CensorCore {
             return false;
         }
 
+        internal static float GetScaleFactor(this int? value, float defaultValue) {
+            var factor = ((value ?? 10F) / 10F);
+            return factor;
+        }
+
     }
 }

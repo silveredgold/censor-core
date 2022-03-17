@@ -65,6 +65,10 @@ namespace CensorCore
                 Math.Min(rect.Y+rect.Height, img.Height)
             );
         }
+
+        public static float GetDistanceTo(this Point a, Point b) {
+            return (float)Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2));
+        }
     }
 
 
