@@ -8,7 +8,7 @@ using SixLabors.ImageSharp.Processing;
 namespace CensorCore.Censoring {
 
     public class BlackBarProvider : ICensorTypeProvider {
-        public async Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level) {
+        public Task<Action<IImageProcessingContext>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level) {
             var rect = new SixLabors.ImageSharp.Drawing.RectangularPolygon(result.Box.X, result.Box.Y, result.Box.Width, result.Box.Height);
             var blackBrush = Brushes.Solid(Color.Black);
             var adjustFactor = (-(10 - (float)level) * 2) / 100;
@@ -16,7 +16,7 @@ namespace CensorCore.Censoring {
             var drawOpts = result.SourceAngle != null
                 ? new DrawingOptions() { Transform = Matrix3x2Extensions.CreateRotationDegrees(result.SourceAngle.Value, result.Box.GetCenter()) }
                 : new DrawingOptions();
-            return (x =>
+            return Task.FromResult<Action<IImageProcessingContext>?>(x =>
             {
                 x.FillPolygon(drawOpts, blackBrush,
                     new PointF(result.Box.X, result.Box.Y),

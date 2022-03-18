@@ -2,8 +2,6 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-
-
 namespace CensorCore.Censoring
 {
     public class PixelationProvider : ICensorTypeProvider
@@ -15,7 +13,7 @@ namespace CensorCore.Censoring
             this._globalOpts = globalOpts;
         }
 
-        public Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
+        public Task<Action<IImageProcessingContext>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
         {
             var padding = inputImage.GetPadding(_globalOpts);
             var cropRect = result.Box.ToRectangle();
@@ -25,7 +23,7 @@ namespace CensorCore.Censoring
                 x.Crop((Rectangle)mask.GetBounds());
             });
             
-            return Task.FromResult(mask.GetMutation(extract));
+            return Task.FromResult<Action<IImageProcessingContext>?>(mask.GetMutation(extract));
         }
 
         private int GetPixelSize(int dimension, int level, int minimumSize = 5) {

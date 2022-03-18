@@ -62,7 +62,8 @@ public class IntersectingMatchMerger : IResultsTransformer
                         transformed.Add(
                             new Classification(
                                 new BoundingBox(unionRect.X, unionRect.Y, unionRect.X + unionRect.Width, unionRect.Y + unionRect.Height), Math.Max(pair.First().Confidence, pair.Last().Confidence), labelGroup.Key) {
-                                    SourceAngle = closest
+                                    SourceAngle = closest,
+                                    VirtualBox = false //it might seem like this would be virtual, but the union rect will work either way.
                                 });
                     } else
                     {

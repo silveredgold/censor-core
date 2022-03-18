@@ -1,5 +1,7 @@
 using System.Linq;
+using System.Numerics;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
@@ -23,18 +25,17 @@ namespace CensorCore.Censoring
         {
             this._globalOpts = options;
         }
-        public async Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
+        public async Task<Action<IImageProcessingContext>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
         {
             var mutations = new List<Action<IImageProcessingContext>>();
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
             var categories = GetCategories(method);
             var sticker = await GetImageAsync(boxRatio, categories);
-            var mask = new EffectMask(result.Box, padding);
+            var mask = new PathEffectMask(result.Box.ToRectangle(), result.SourceAngle.GetValueOrDefault(), padding);
             var extract = inputImage.Clone(x => {
-                var cropRect = result.Box.ToRectangle().GetPadded(padding, inputImage);
-                x.Crop(cropRect);
                 x.GaussianBlur(Math.Max(level, 10)*2);
+                x.Crop((Rectangle)mask.GetBounds());
             });
             mutations.Add(mask.GetMutation(extract));
             var effectCenter = result.Box.GetCenter();
@@ -49,6 +50,14 @@ namespace CensorCore.Censoring
                     stickerImage.Mutate(s => {
                         s.Resize(resizeOpts);
                     });
+                    if (result.SourceAngle.HasValue) {
+                        var ctr = result.Box.GetCenter();
+                        var affineBuilder = new AffineTransformBuilder();
+                        affineBuilder.PrependTranslation(new Vector2(ctr.X, ctr.Y));
+                        affineBuilder.PrependRotationDegrees(result.SourceAngle.Value);
+                        affineBuilder.AppendTranslation(new Vector2(-ctr.X, -ctr.Y));
+                        stickerImage.Mutate(m => m.Transform(affineBuilder));
+                    }
                     var targetLoc = new Point(effectCenter.X - (stickerImage.Width/2), effectCenter.Y - (stickerImage.Height/2));
                     mutations.Add(x => {
                         x.DrawImage(stickerImage, targetLoc, Math.Min(level/10F,1));

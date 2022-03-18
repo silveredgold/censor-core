@@ -12,7 +12,7 @@ namespace CensorCore
 
         public float Confidence {get;set;}
         public string Label {get;set;}
-        
+
         /// <summary>
         /// Offset angle for any reference points this classification is based on. 
         /// This will only be set when the classification has been transformed from the original match. 
@@ -20,5 +20,17 @@ namespace CensorCore
         /// </summary>
         /// <value>The angle in degrees of the underlying reference points (if present).</value>
         public float? SourceAngle {get;set;} = null;
+
+        /// <summary>
+        /// Indicates if this classification's bounding box is a "virtual" match.
+        /// If this is true, the box should only be considered a valid match if it
+        /// has also had relevant transforms applied.
+        /// </summary>
+        /// <remarks>
+        /// The most notable effect of this flag being true is that providers that
+        /// don't support rotation will likely ignore the match entirely.
+        /// </remarks>
+        /// <value>True if the bounding box is virtual, otherwise false.</value>
+        public bool VirtualBox {get;set;} = false;
     }
 }

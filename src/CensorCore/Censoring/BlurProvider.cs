@@ -1,6 +1,4 @@
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing;
-using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
@@ -14,7 +12,7 @@ namespace CensorCore.Censoring {
         public BlurProvider() {
             _globalOpts = new GlobalCensorOptions();
         }
-        public async Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level) {
+        public Task<Action<IImageProcessingContext>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level) {
             var padding = inputImage.GetPadding(_globalOpts);
             var cropRect = result.Box.ToRectangle();
             var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
@@ -24,7 +22,7 @@ namespace CensorCore.Censoring {
             });
             extract.Mutate(x => x.Crop((Rectangle)mask.GetBounds()));
             var mutation = mask.GetMutation(extract);
-            return mutation;
+            return Task.FromResult<Action<IImageProcessingContext>?>(mutation);
         }
     }
 }

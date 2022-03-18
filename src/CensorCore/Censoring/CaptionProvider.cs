@@ -18,21 +18,23 @@ namespace CensorCore.Censoring {
         public bool Supports(string censorType) => censorType.StartsWith("caption");
         public int Layer => 6;
 
-        public async Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level) {
+        public async Task<Action<IImageProcessingContext>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level) {
             var mutations = new List<Action<IImageProcessingContext>>();
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
             var categories = method.GetCategories();
             var caption = await _assetStore.GetRandomCaption(categories?.Random());
             // var caption = GetCaption().ToUpper();
-            var mask = new EffectMask(result.Box, padding);
-            var cropRect = result.Box.ToRectangle().GetPadded(padding, inputImage);
+
+            var cropRect = result.Box.ToRectangle();
+            var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
             var extract = inputImage.Clone(x =>
             {
-                x.Crop(cropRect);
                 x.GaussianBlur(Math.Max(level, 10) * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height)/100)));
+                x.Crop((Rectangle)mask.GetBounds());
             });
             mutations.Add(mask.GetMutation(extract));
+            
             if (caption != null) {
                 var levelDiff = ((level-10F)*0.75F)+10F;
                 var fontSize = (result.Box.Width/4F)*(levelDiff.GetScaleFactor(10F));
