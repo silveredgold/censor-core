@@ -53,7 +53,7 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         var stickers = new StickerProvider(new EmptyAssetStore());
         var caption = new CaptionProvider(new EmptyAssetStore());
         var transformers = new IResultsTransformer[] {new CensorScaleTransformer(new GlobalCensorOptions {RelativeCensorScale = 1F}), new IntersectingMatchMerger() };
-        var middleware = new ICensoringMiddleware[] { new FacialFeaturesMiddleware()};
+        var middleware = new ICensoringMiddleware[] { new FacialFeaturesMiddleware(new EmptyAssetStore())};
         var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption }, transformers: settings.NoTransformers ? Array.Empty<IResultsTransformer>() : transformers, middlewares: middleware);
 
         AnsiConsole.MarkupLine("Invoking model...");

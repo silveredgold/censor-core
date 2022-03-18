@@ -44,9 +44,10 @@ namespace CensorCore {
             return Task.FromResult(ratioImages.Select(i => new RawImageData(File.ReadAllBytes(i.FilePath), i.Format.DefaultMimeType)));
         }
 
-        public Task<string?> GetRandomCaption(string? category)
+        public async Task<string?> GetRandomCaption(string? category)
         {
-            return Task.FromResult<string?>(null);
+            var lines = await File.ReadAllLinesAsync(@"X:\BetaSafety\BetaSafety-0.6.0.2\BetaSafety\browser-extension\eyebarCaptions.txt");
+            return lines.Random();
         }
 
         public async Task<RawImageData?> GetRandomImage(string imageType, float? ratio, List<string>? category)

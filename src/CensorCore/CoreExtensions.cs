@@ -56,5 +56,20 @@ namespace CensorCore {
             return factor;
         }
 
+        internal static List<string>? GetCategories(this string method) {
+            List<string>? categories = null;
+            var catString = method.Split(":").Skip(1).FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(catString)) {
+                var cats = catString.Split(',', ';').ToList();
+                if (!cats.Any()) {
+                    throw new InvalidOperationException();
+                }
+                else {
+                    categories = cats;
+                }
+            }
+            return categories;
+        }
+
     }
 }

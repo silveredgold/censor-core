@@ -69,6 +69,17 @@ namespace CensorCore
         public static float GetDistanceTo(this Point a, Point b) {
             return (float)Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2));
         }
+
+        public static Point GetMidpointBetween(this Point a, Point b) {
+            return new Point((a.X + b.X)/2, (a.Y + b.Y)/2);
+        }
+
+        public static float GetAngleTo(this Point start, Point end) {
+            var deltaY = start.Y - end.Y;
+            var deltaX = end.X - start.X;
+            var angle = (180/Math.PI) * Math.Atan2(deltaY, deltaX);
+            return (float)(-angle);
+        }
     }
 
 

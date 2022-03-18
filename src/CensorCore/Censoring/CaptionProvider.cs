@@ -22,7 +22,7 @@ namespace CensorCore.Censoring {
             var mutations = new List<Action<IImageProcessingContext>>();
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
-            var categories = GetCategories(method);
+            var categories = method.GetCategories();
             var caption = await _assetStore.GetRandomCaption(categories?.Random());
             // var caption = GetCaption().ToUpper();
             var mask = new EffectMask(result.Box, padding);
@@ -55,21 +55,6 @@ namespace CensorCore.Censoring {
                     mutation(x);
                 }
             };
-        }
-
-        private List<string>? GetCategories(string method) {
-            List<string>? categories = null;
-            var catString = method.Split(":").Skip(1).FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(catString)) {
-                var cats = catString.Split(',', ';').ToList();
-                if (!cats.Any()) {
-                    throw new InvalidOperationException();
-                }
-                else {
-                    categories = cats;
-                }
-            }
-            return categories;
         }
 
         internal static FontCollection GetDefaultFontCollection() {

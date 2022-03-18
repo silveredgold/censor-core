@@ -1,4 +1,5 @@
 using Microsoft.ML.OnnxRuntime;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -15,9 +16,12 @@ namespace CensorCore.Censoring {
     public class FacialFeaturesMiddleware : ICensoringMiddleware {
         private FaceAIService? _fService;
         private ImageSharpHandler? _fileHandler;
+        private readonly FontCollection _fonts;
+        private readonly IAssetStore _assetStore;
 
-        public FacialFeaturesMiddleware() {
-
+        public FacialFeaturesMiddleware(IAssetStore assetStore) {
+            _fonts = CaptionProvider.GetDefaultFontCollection();
+            _assetStore = assetStore;
         }
 
         public Task OnAfterCensoring(Image image) {
@@ -52,7 +56,7 @@ namespace CensorCore.Censoring {
                                     return p;
                                 }).ToList();
                                 var eyesResult = parser?.GetOptions("EYES_F");
-                                if (eyesResult != null && eyesResult.CensorType.ContainsAny(StringComparison.CurrentCultureIgnoreCase, "bars", "bb", "blackb")) {
+                                if (eyesResult != null && eyesResult.CensorType.ContainsAny(StringComparison.CurrentCultureIgnoreCase, "bars", "bb", "blackb", "caption")) {
                                     var left = points[36];
                                     var right = points[45];
 
@@ -69,10 +73,36 @@ namespace CensorCore.Censoring {
                                     {
                                         x.DrawLines(Pens.Solid(Color.Black, eyeLine.Width), eyeLine.Start, eyeLine.End);
                                     });
+                                    if (eyesResult.CensorType.Contains("caption", StringComparison.CurrentCultureIgnoreCase)) {
+                                        var categories = eyesResult.CensorType.GetCategories();
+                                        var caption = await _assetStore.GetRandomCaption(categories?.Random());
+                                        if (caption != null) {
+                                            var lineLength = eyeLine.Start.GetDistanceTo(eyeLine.End);
+                                            var font = _fonts.Families.First().CreateFont(lineLength/5F, FontStyle.Bold);
+                                            var midPoint = eyeLine.Start.GetMidpointBetween(eyeLine.End);
+                                            TextOptions options = new(font) {
+                                                Origin = midPoint, //TODO // Set the rendering origin.
+                                                WrappingLength = (float)(lineLength * 1.25), // Greater than zero so we will word wrap at 100 pixels wide
+                                                HorizontalAlignment = HorizontalAlignment.Center,
+                                                VerticalAlignment = VerticalAlignment.Center,
+                                            };
+                                            IBrush brush = Brushes.Solid(Color.White);
+                                            IPen pen = Pens.Solid(Color.White, eyeLine.Width/40F);
+                                            var angle = eyeLine.Start.GetAngleTo(eyeLine.End);
+                                            addLateMutation(10, x => {
+                                                x.DrawText(new DrawingOptions() {Transform = Matrix3x2Extensions.CreateRotationDegrees(angle, eyeLine.Start.GetMidpointBetween(eyeLine.End))},
+                                                options, caption.ToUpper(), brush, pen
+                                                );
+                                            });
+                                        }
+                                    }
+                                    
                                 }
                                 // var points = landmarks.Results;
                                 var mouthResult = parser?.GetOptions("MOUTH_F");
-                                if (mouthResult != null && mouthResult.CensorType.ContainsAny(StringComparison.CurrentCultureIgnoreCase, "bars", "bb", "blackb")) {
+                                if (mouthResult != null && mouthResult.CensorType.ContainsAny(StringComparison.CurrentCultureIgnoreCase, "bars", "bb", "blackb", "caption")) {
+                                    // We're only pretending to support captions here.
+                                    // Text layout in a box this (potentially) small and weirdly-shaped is just too hard.
                                     var mouthPairs = new[] {
                                             (Start: points[49], End: points[59]),
                                             (Start: points[50], End: points[58]),
