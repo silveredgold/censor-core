@@ -40,7 +40,7 @@ A no-op transformer can simply return the match collection it was passed.
 
 > Use this with caution! This API is very easy to get wrong, and is _usually_ only a last resort for niche use cases.
 
-As the name implies, censoring middleware is an abstraction for more complex and niche censoring needs that need access to more of the censoring session. They can also add new mutations to the image but *cannot* modify/remove other censors. Since they are executed sequentially and block censoring until completed, you should try and keep middleware as fast as possible.
+As the name implies, censoring middleware is an abstraction for more complex and niche censoring needs that need access to more of the censoring session. They can also add new mutations to the image but *cannot* modify/remove other censors. Since they are executed sequentially and block censoring until completed, you should try and keep middleware as fast as possible. Currently, it is only used for censoring matches not supported by NudeNet.
 
 ## `IResultParser`
 

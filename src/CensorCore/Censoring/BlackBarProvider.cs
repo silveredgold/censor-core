@@ -13,9 +13,12 @@ namespace CensorCore.Censoring {
             var blackBrush = Brushes.Solid(Color.Black);
             var adjustFactor = (-(10 - (float)level) * 2) / 100;
             var adjBox = result.Box.ScaleBy(result.Box.Width * adjustFactor, result.Box.Height * adjustFactor);
+            var drawOpts = result.SourceAngle != null
+                ? new DrawingOptions() { Transform = Matrix3x2Extensions.CreateRotationDegrees(result.SourceAngle.Value, result.Box.GetCenter()) }
+                : new DrawingOptions();
             return (x =>
             {
-                x.FillPolygon(blackBrush,
+                x.FillPolygon(drawOpts, blackBrush,
                     new PointF(result.Box.X, result.Box.Y),
                     new PointF(result.Box.X + result.Box.Width, result.Box.Y),
                     new PointF(result.Box.X + result.Box.Width, result.Box.Y + result.Box.Height),

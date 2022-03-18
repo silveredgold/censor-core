@@ -53,11 +53,17 @@ public class IntersectingMatchMerger : IResultsTransformer
                         r => r.Height > rectA.Height * 2F && r.Height > rectB.Height*2F
                     };
                     var unionRect = Rectangle.Union(rectA, rectB);
+                    var closest = new[] {
+                        rectA.GetCenter().GetAngleTo(rectB.GetCenter()),
+                        rectB.GetCenter().GetAngleTo(rectA.GetCenter())
+                        }.ClosestTo(0F);
                     if (!rejections.All(r => r(unionRect)))
                     {
                         transformed.Add(
                             new Classification(
-                                new BoundingBox(unionRect.X, unionRect.Y, unionRect.X + unionRect.Width, unionRect.Y + unionRect.Height), Math.Max(pair.First().Confidence, pair.Last().Confidence), labelGroup.Key));
+                                new BoundingBox(unionRect.X, unionRect.Y, unionRect.X + unionRect.Width, unionRect.Y + unionRect.Height), Math.Max(pair.First().Confidence, pair.Last().Confidence), labelGroup.Key) {
+                                    SourceAngle = closest
+                                });
                     } else
                     {
                         transformed.AddRange(pair);

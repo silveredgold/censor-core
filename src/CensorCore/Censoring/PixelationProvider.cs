@@ -18,11 +18,11 @@ namespace CensorCore.Censoring
         public Task<Action<IImageProcessingContext>> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
         {
             var padding = inputImage.GetPadding(_globalOpts);
-            var mask = new EffectMask(result.Box, padding);
+            var cropRect = result.Box.ToRectangle();
+            var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
             var extract = inputImage.Clone(x => {
-                var cropRect = result.Box.ToRectangle().GetPadded(padding, inputImage);
-                x.Crop(cropRect);
                 x.Pixelate(GetPixelSize(Math.Max(result.Box.Height, result.Box.Width), level));
+                x.Crop((Rectangle)mask.GetBounds());
             });
             
             return Task.FromResult(mask.GetMutation(extract));

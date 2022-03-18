@@ -12,7 +12,7 @@ namespace CensorCore
             return new Rectangle(Convert.ToInt32(box.X), Convert.ToInt32(box.Y), box.Width, box.Height);
         }
 
-        public static Rectangle GetPadded(this Rectangle rect, int padAmount = 10)
+        public static Rectangle GetPadded(this Rectangle rect, int padAmount = 1)
         {
             return new Rectangle(rect.X - padAmount, rect.Y - padAmount, rect.Width + (2 * padAmount), rect.Height + (2 * padAmount));
         }

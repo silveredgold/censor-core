@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CensorCore.Censoring;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
@@ -60,17 +61,22 @@ namespace CensorCore.Censoring
                     }
                 }
             }
+            var timer = new Stopwatch();
             foreach (var match in transformedMatches.OrderBy(r => r.Box.Width * r.Box.Height))
             {
                 var options = parser?.GetOptions(match, image) ?? new ImageCensorOptions(nameof(BlurProvider)) { Level = 10 };
                 var provider = this._providers.FirstOrDefault(p => p.Supports(options.CensorType ?? string.Empty));
                 if (provider != null)
                 {
-                    
+                    timer.Restart();
                     var censorMutation = await provider.CensorImage(img, match, options.CensorType, options.Level ?? 10);
                     if (censorMutation != null)
                     {
                         AddCensor(provider.Layer, censorMutation);
+                    }
+                    timer.Stop();
+                    if (timer.Elapsed.TotalSeconds > 1D) {
+                        Console.WriteLine($"WARN: Censoring for {provider.GetType().Name} on {match.Label} took {timer.Elapsed.TotalSeconds}s!");
                     }
                 }
             }

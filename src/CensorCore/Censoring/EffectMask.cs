@@ -27,6 +27,13 @@ namespace CensorCore.Censoring
             this._options = new GraphicsOptions { AlphaCompositionMode = PixelAlphaCompositionMode.SrcIn };
         }
 
+        public EffectMask(Rectangle rect, int padding = 0)
+        {
+            this._box = rect;
+            this._padding = padding;
+            this._options = new GraphicsOptions { AlphaCompositionMode = PixelAlphaCompositionMode.SrcIn };
+        }
+
         private Image<Rgba32> GetMaskBase() {
             return new Image<Rgba32>(this._box.Width + (this._padding*2), this._box.Height + (this._padding*2), Rgba32.ParseHex("#00000000"));
         }

@@ -34,7 +34,9 @@ namespace CensorCore.Censoring {
             });
             mutations.Add(mask.GetMutation(extract));
             if (caption != null) {
-                var font = _fonts.Families.First().CreateFont(result.Box.Width/4F, FontStyle.Bold);
+                var levelDiff = ((level-10F)*0.75F)+10F;
+                var fontSize = (result.Box.Width/4F)*(levelDiff.GetScaleFactor(10F));
+                var font = _fonts.Families.First().CreateFont(fontSize, FontStyle.Bold);
                 // The options are optional
                 TextOptions options = new(font) {
                     Origin = cropRect.GetCenter(), // Set the rendering origin.
@@ -44,10 +46,13 @@ namespace CensorCore.Censoring {
                     VerticalAlignment = VerticalAlignment.Center
                 };
                 IBrush brush = Brushes.Solid(Color.White);
-                IPen pen = Pens.Solid(Color.Black, result.Box.Width/80F);
-
-                // Draws the text with horizontal red and blue hatching with a dash dot pattern outline.
-                mutations.Add(x => x.DrawText(options, caption.ToUpper(), brush, pen));
+                IPen pen = Pens.Solid(Color.Black, (result.Box.Width/80F)*(level.GetScaleFactor(10F)));
+                if (result.SourceAngle.HasValue) {
+                    var drawOpts = new DrawingOptions() { Transform = Matrix3x2Extensions.CreateRotationDegrees(result.SourceAngle.Value, result.Box.GetCenter())};
+                    mutations.Add(x => x.DrawText(drawOpts, options, caption.ToUpper(), brush, pen));
+                } else {
+                    mutations.Add(x => x.DrawText(options, caption.ToUpper(), brush, pen));
+                }
             }
             return x =>
             {

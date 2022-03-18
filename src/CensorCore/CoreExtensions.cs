@@ -52,7 +52,17 @@ namespace CensorCore {
         }
 
         internal static float GetScaleFactor(this int? value, float defaultValue) {
-            var factor = ((value ?? 10F) / 10F);
+            var factor = ((value ?? defaultValue) / defaultValue);
+            return factor;
+        }
+
+        internal static float GetScaleFactor(this int value, float defaultValue) {
+            var factor = (value / defaultValue);
+            return factor;
+        }
+
+        internal static float GetScaleFactor(this float value, float defaultValue) {
+            var factor = (value / defaultValue);
             return factor;
         }
 
@@ -69,6 +79,10 @@ namespace CensorCore {
                 }
             }
             return categories;
+        }
+
+        internal static float ClosestTo(this IEnumerable<float> values, float constant) {
+            return values.Aggregate((x,y) => Math.Abs(x-constant) < Math.Abs(y-constant) ? x : y);
         }
 
     }
