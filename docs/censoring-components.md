@@ -28,13 +28,21 @@ The censor type provider is an implementation of `ICensorTypeProvider` and is re
 
 Note that the modification is not *immediately* applied to the source image, the provider just stores it for later application.
 
+#### Layers
+
+Every provider specifies a *layer* that its modifications are made on. Providers can specify whatever layer they want, but the default is `0`. In general, only change this if your censor type is **additive**. Layer 0 is where all destructive or source-based edits are made (like blurs, pixelations etc), while captions and stickers (for example) are made a few layers higher since they are drawn over other censors/image features. You could also set your layer below `0`, but be aware that it may then be cancelled out by the source-based censors on layer 0.
+
+#### Virtual Classifications
+
+The `Classification` type includes a `VirtualBox` property that designates the current classification as "virtual". Virtual classifications are matches that aren't directly based on the content at the given bounding box. This *usually* indicates that the content to be censored is at a related location (such as the location after any relevant offsets or transforms are applied). If your provider is limited in capabilities (like not handling angled results) then skip virtual classifications to avoid censoring irrelevant areas of the images.
+
 ### `IResultsTransformer`
 
 > Use this with caution! If an `IResultsTransformer` doesn't return a match, it is **dropped** from the censoring session.
 
 The `IResultsTransformer` API is useful for transforming the results from the AI before the censoring begins, for changes that don't need the image data. For example, an `IResultsTransformer` can add new matches based on existing AI matches, or add/remove matches to be passed to the censoring providers. For a more grounded example, one of the bundled transformers applies a flat scaling to increase/decrease the size of the matches returned by the AI.
 
-A no-op transformer can simply return the match collection it was passed.
+A no-op transformer can simply return the match collection it was passed. Additionally, the ResultsTransformer is currently **synchronous**. This may be changed in a future release.
 
 ### `ICensoringMiddleware`
 

@@ -45,7 +45,7 @@ namespace CensorCore.Censoring
             {
                 foreach (var transformer in _transformers)
                 {
-                    transformedMatches = transformer.TransformResults(transformedMatches);
+                    transformedMatches = transformer.TransformResults(transformedMatches, parser);
                 }
             }
             if (_middlewares.Any()) {

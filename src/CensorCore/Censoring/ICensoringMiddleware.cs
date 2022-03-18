@@ -30,57 +30,30 @@ public class FacialFeaturesMiddleware : ICensoringMiddleware {
         var eyesResult = parser?.GetOptions("EYES_F", result);
         var mouthOptions = parser?.GetOptions("MOUTH_F", result);
         if (eyesResult is not null || mouthOptions is not null) {
+            var classifications = new List<Classification>();
             foreach (var faceMatch in result.Results.Where(r => r.Label.ToLower().Contains("face_f"))) {
                 var features = await _faceService.GetFeatures(result, faceMatch);
                 if (features != null && features.TryGetValue("EYES_F", out var eyeFeature) && eyesResult != null) {
-                    if (eyesResult.CensorType.ContainsAny(StringComparison.CurrentCultureIgnoreCase, "bars", "bb", "blackb", "caption")) {
                         var factor = eyesResult.Level.GetScaleFactor(10F);
-                        var eyeLine = eyeFeature.ToLine(factor * 3F, factor * 0.25F);
-                        addLateMutation(10, x =>
-                        {
-                            x.DrawLines(Pens.Solid(Color.Black, eyeLine.Width), eyeLine.Start, eyeLine.End);
+                        var rect = eyeFeature.ToVirtualBox(factor * 2F, factor * 0.25F);
+                        var pts = eyeFeature.GetOffsetPoints(factor * 0.25F);
+                        var angle = pts.Start.GetAngleTo(pts.End);
+                        classifications.Add(new Classification(rect, faceMatch.Confidence, "EYES_F") {
+                            SourceAngle = angle,
+                            VirtualBox = true
                         });
-                        if (eyesResult.CensorType.Contains("caption", StringComparison.CurrentCultureIgnoreCase)) {
-                            var categories = eyesResult.CensorType.GetCategories();
-                            var caption = await _assetStore.GetRandomCaption(categories?.Random());
-                            if (caption != null) {
-                                var lineLength = eyeLine.Start.GetDistanceTo(eyeLine.End);
-                                var font = _fonts.Families.First().CreateFont(lineLength / 5F, FontStyle.Bold);
-                                var midPoint = eyeLine.Start.GetMidpointBetween(eyeLine.End);
-                                TextOptions options = new(font) {
-                                    Origin = midPoint, //TODO // Set the rendering origin.
-                                    WrappingLength = (float)(lineLength * 1.25), // Greater than zero so we will word wrap at 100 pixels wide
-                                    HorizontalAlignment = HorizontalAlignment.Center,
-                                    VerticalAlignment = VerticalAlignment.Center,
-                                };
-                                var angle = eyeLine.Start.GetAngleTo(eyeLine.End);
-                                addLateMutation(10, x =>
-                                {
-                                    x.DrawText(
-                                        new DrawingOptions() { Transform = Matrix3x2Extensions.CreateRotationDegrees(angle, eyeLine.Start.GetMidpointBetween(eyeLine.End)) },
-                                        options, 
-                                        caption.ToUpper(), 
-                                        Brushes.Solid(Color.White), 
-                                        Pens.Solid(Color.White, eyeLine.Width / 40F)
-                                    );
-                                });
-                            }
-                        }
-                    }
                 }
                 if (features != null && features.TryGetValue("MOUTH_F", out var mouthFeature) && mouthOptions != null) {
-                    if (mouthOptions.CensorType.ContainsAny(StringComparison.CurrentCultureIgnoreCase, "bars", "bb", "blackb", "caption")) {
-                        // We're only pretending to support captions here.
-                        // Text layout in a box this (potentially) small and weirdly-shaped is just too hard.
-                        var mouthBox = mouthFeature.ToLine(mouthOptions.Level.GetScaleFactor(10F) * 1.5F);
-                        addLateMutation(10, x =>
-                        {
-                            x.DrawLines(Pens.Solid(Color.Black, mouthBox.Width), mouthBox.Start, mouthBox.End);
+                        var mouthBox = mouthFeature.ToVirtualBox(mouthOptions.Level.GetScaleFactor(10F) * 1.5F);
+                        var pts = mouthFeature.GetOffsetPoints();
+                        var angle = pts.Start.GetAngleTo(pts.End);
+                        classifications.Add(new Classification(mouthBox, faceMatch.Confidence, "MOUTH_F") {
+                            SourceAngle = angle,
+                            VirtualBox = true
                         });
                     }
-                }
-
             }
+            return classifications;
         }
         return null;
     }

@@ -4,7 +4,7 @@ namespace CensorCore.Censoring;
 
 public interface IResultsTransformer
 {
-    IEnumerable<Classification> TransformResults(IEnumerable<Classification> matches);
+    IEnumerable<Classification> TransformResults(IEnumerable<Classification> matches, IResultParser? parser);
 }
 
 public class CensorScaleTransformer : IResultsTransformer
@@ -16,7 +16,7 @@ public class CensorScaleTransformer : IResultsTransformer
         _scaleFactor = censorOptions?.RelativeCensorScale ?? 1F;
 
     }
-    public IEnumerable<Classification> TransformResults(IEnumerable<Classification> matches)
+    public IEnumerable<Classification> TransformResults(IEnumerable<Classification> matches, IResultParser? parser)
     {
         return matches.Select(m =>
         {
@@ -32,7 +32,7 @@ public class CensorScaleTransformer : IResultsTransformer
 
 public class IntersectingMatchMerger : IResultsTransformer
 {
-    public IEnumerable<Classification> TransformResults(IEnumerable<Classification> results)
+    public IEnumerable<Classification> TransformResults(IEnumerable<Classification> results, IResultParser? parser)
     {
         var transformed = new List<Classification>();
         var matches = results.GroupBy(r => r.Label).ToList();
