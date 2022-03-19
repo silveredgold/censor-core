@@ -66,10 +66,43 @@ namespace CensorCore {
             return factor;
         }
 
-        internal static (List<string>? Categories, bool PreferBox) GetOptions(this string method, string methodName) {
+        internal static (List<string>? Categories, Flurl.QueryParamCollection? Parameters) GetOptions(this string method, string methodName) {
+            List<string>? categories = null;
+            if (method.Contains('?') && method.Replace(methodName, string.Empty, StringComparison.CurrentCultureIgnoreCase)[0] == '?') {
+                //query string parse
+                var url = new Flurl.Url(method);
+                if (url.QueryParams.GetAll("category") is var cats && cats.Any()) {
+                    categories ??= new List<string>();
+                    categories.AddRange(cats.Cast<string>());
+                }
+                if (url.QueryParams.TryGetFirst("categories", out var catsObj)) {
+                    var splitCats = ((string)catsObj).Split(',', ';').ToList();
+                    if (splitCats.Any()) {
+                        categories ??= new List<string>();
+                        categories.AddRange(splitCats);
+                    }
+                }
+                return (categories, url.QueryParams);
+
+            } else {
+                var catString = method.Split(":").LastOrDefault();
+                if (!string.IsNullOrWhiteSpace(catString)) {
+                    var cats = catString.Split(',', ';').ToList();
+                    if (!cats.Any()) {
+                        throw new InvalidOperationException();
+                    }
+                    else {
+                        categories = cats;
+                    }
+                }
+                return (categories, null);
+            }
+        }
+
+        internal static (List<string>? Categories, bool PreferBox) GetCaptionOptions(this string method, string methodName) {
             List<string>? categories = null;
             var preferBox = false;
-            if (method.Contains('?') && method.Replace(methodName, string.Empty)[0] == '?') {
+            if (method.Contains('?') && method.Replace(methodName, string.Empty, StringComparison.CurrentCultureIgnoreCase)[0] == '?') {
                 //query string parse
                 var url = new Flurl.Url(method);
                 if (url.QueryParams.GetAll("category") is var cats && cats.Any()) {

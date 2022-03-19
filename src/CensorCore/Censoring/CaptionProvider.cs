@@ -23,34 +23,17 @@ namespace CensorCore.Censoring {
             var mutations = new List<Action<IImageProcessingContext>>();
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
-            var opts = method.GetOptions("caption");
+            var opts = method.GetCaptionOptions("caption");
             var categories = opts.Categories;
             var caption = await _assetStore.GetRandomCaption(categories?.Random());
             var cropRect = result.Box.ToRectangle();
 
             if (opts.PreferBox) {
-                var rect = new RectangularPolygon(result.Box.X, result.Box.Y, result.Box.Width, result.Box.Height);
-                var blackBrush = Brushes.Solid(Color.Black);
-                var adjustFactor = (-(10 - (float)level) * 2) / 100;
-                var adjBox = result.Box.ScaleBy(result.Box.Width * adjustFactor, result.Box.Height * adjustFactor);
-                var drawOpts = result.SourceAngle != null
-                    ? new DrawingOptions() { Transform = Matrix3x2Extensions.CreateRotationDegrees(result.SourceAngle.Value, result.Box.GetCenter()) }
-                    : new DrawingOptions();
-                mutations.Add(x =>
-                    x.FillPolygon(drawOpts, blackBrush,
-                        new PointF(result.Box.X, result.Box.Y),
-                        new PointF(result.Box.X + result.Box.Width, result.Box.Y),
-                        new PointF(result.Box.X + result.Box.Width, result.Box.Y + result.Box.Height),
-                        new PointF(result.Box.X, result.Box.Y + result.Box.Height))
-                    );
+                var bar = CensorEffects.GetBlackBarEffect(inputImage, result, level);
+                mutations.Add(bar);
             } else {
-                var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
-                var extract = inputImage.Clone(x =>
-                {
-                    x.GaussianBlur(Math.Max(level, 10) * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height)/100)));
-                    x.Crop((Rectangle)mask.GetBounds());
-                });
-                mutations.Add(mask.GetMutation(extract));
+                var blur = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level);
+                mutations.Add(blur);
             }
             
             if (caption != null) {

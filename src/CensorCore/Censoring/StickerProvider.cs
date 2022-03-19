@@ -30,14 +30,15 @@ namespace CensorCore.Censoring
             var mutations = new List<Action<IImageProcessingContext>>();
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
-            var categories = GetCategories(method);
-            var sticker = await GetImageAsync(boxRatio, categories);
-            var mask = new PathEffectMask(result.Box.ToRectangle(), result.SourceAngle.GetValueOrDefault(), padding);
-            var extract = inputImage.Clone(x => {
-                x.GaussianBlur(Math.Max(level, 10)*2);
-                x.Crop((Rectangle)mask.GetBounds());
-            });
-            mutations.Add(mask.GetMutation(extract));
+            var options = method.GetOptions("sticker");
+            var useBlur = options.Parameters != null
+                ? options.Parameters.TryGetFirst("useBlur", out var optionObj) && bool.TryParse((string)optionObj, out var useBlurOption) && useBlurOption
+                : true;
+            var sticker = await GetImageAsync(boxRatio, options.Categories);
+            if (useBlur) {
+                var blurMutation = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level);
+                mutations.Add(blurMutation);
+            }
             var effectCenter = result.Box.GetCenter();
             if (sticker != null) {
                 var stickerImage = Image.Load(sticker);
@@ -110,21 +111,5 @@ namespace CensorCore.Censoring
 
         public bool Supports(string censorType) => censorType.StartsWith("sticker");
         public int Layer => 6;
-
-        
-
-        private List<string>? GetCategories(string method) {
-            List<string>? categories = null;
-            var catString = method.Split(":").Skip(1).FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(catString)) {
-                var cats = catString.Split(',', ';').ToList();
-                if (!cats.Any()) {
-                    throw new InvalidOperationException();
-                } else {
-                    categories = cats;
-                }
-            }
-            return categories;
-        }
     }
 }
