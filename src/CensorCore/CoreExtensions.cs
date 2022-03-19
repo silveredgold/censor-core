@@ -66,19 +66,43 @@ namespace CensorCore {
             return factor;
         }
 
-        internal static List<string>? GetCategories(this string method) {
+        internal static (List<string>? Categories, bool PreferBox) GetOptions(this string method, string methodName) {
             List<string>? categories = null;
-            var catString = method.Split(":").Skip(1).FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(catString)) {
-                var cats = catString.Split(',', ';').ToList();
-                if (!cats.Any()) {
-                    throw new InvalidOperationException();
+            var preferBox = false;
+            if (method.Contains('?') && method.Replace(methodName, string.Empty)[0] == '?') {
+                //query string parse
+                var url = new Flurl.Url(method);
+                if (url.QueryParams.GetAll("category") is var cats && cats.Any()) {
+                    categories ??= new List<string>();
+                    categories.AddRange(cats.Cast<string>());
                 }
-                else {
-                    categories = cats;
+                if (url.QueryParams.TryGetFirst("categories", out var catsObj)) {
+                    var splitCats = ((string)catsObj).Split(',', ';').ToList();
+                    if (splitCats.Any()) {
+                        categories ??= new List<string>();
+                        categories.AddRange(splitCats);
+                    }
                 }
+                if (url.QueryParams.TryGetFirst("preferBox", out var preferBoxParam)) {
+                    if (bool.TryParse((string)preferBoxParam, out var boxPreferred)) {
+                        preferBox = boxPreferred;
+                    }
+                }
+                return (categories, preferBox);
+
+            } else {
+                var catString = method.Split(":").LastOrDefault();
+                if (!string.IsNullOrWhiteSpace(catString)) {
+                    var cats = catString.Split(',', ';').ToList();
+                    if (!cats.Any()) {
+                        throw new InvalidOperationException();
+                    }
+                    else {
+                        categories = cats;
+                    }
+                }
+                return (categories, preferBox);
             }
-            return categories;
         }
 
         internal static float ClosestTo(this IEnumerable<float> values, float constant) {

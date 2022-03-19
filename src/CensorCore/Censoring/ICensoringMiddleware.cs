@@ -35,7 +35,7 @@ public class FacialFeaturesMiddleware : ICensoringMiddleware {
                 var features = await _faceService.GetFeatures(result, faceMatch);
                 if (features != null && features.TryGetValue("EYES_F", out var eyeFeature) && eyesResult != null) {
                         var factor = eyesResult.Level.GetScaleFactor(10F);
-                        var rect = eyeFeature.ToVirtualBox(factor * 2F, factor * 0.25F);
+                        var rect = eyeFeature.ToVirtualBox(factor * 3F, factor * 0.25F);
                         var pts = eyeFeature.GetOffsetPoints(factor * 0.25F);
                         var angle = pts.Start.GetAngleTo(pts.End);
                         classifications.Add(new Classification(rect, faceMatch.Confidence, "EYES_F") {

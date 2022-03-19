@@ -13,7 +13,7 @@ namespace CensorCore.Censoring
     public interface ICensorTypeProvider {
         bool Supports(string censorType) {
             var typeName = this.GetType().Name.Replace("Provider", string.Empty);
-            return censorType.Replace("Provider", string.Empty).Equals(typeName, StringComparison.InvariantCultureIgnoreCase);
+            return censorType.Split('?', ':').First().Replace("Provider", string.Empty).Equals(typeName, StringComparison.InvariantCultureIgnoreCase);
         }
 
         int Layer { get { return 0;} }
