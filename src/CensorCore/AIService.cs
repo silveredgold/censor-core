@@ -156,8 +156,8 @@ namespace CensorCore
             var labelOutput = tensorOutput.First(to => to.ElementType == TensorElementType.Int32); //output3
 
             var floatTensors = tensorOutput.Where(to => to.ElementType == TensorElementType.Float).Select(to => to.AsTensor<float>()).ToList();
-            var rawScores = floatTensors.First(ft => ft.First() < 1F);
-            var rawBoxes = floatTensors.First(ft => ft.First() > 0F);
+            var rawScores = floatTensors.First(ft => ft.Length < 1000);
+            var rawBoxes = floatTensors.First(ft => ft.Length > 1000);
             var rawLabels = labelOutput.AsTensor<int>();
 
             var length = rawLabels.Length;

@@ -165,7 +165,12 @@ namespace CensorCore.Censoring {
             var deltaY = (masked.Height - _rect.Height)/2;
             return (x =>
             {
-                x.DrawImage(masked, new Point(Convert.ToInt32(this._rect.X - deltaX), Convert.ToInt32(this._rect.Y - deltaY)), 1);
+                x.DrawImage(
+                    masked, 
+                    new Point(
+                        Convert.ToInt32(Math.Max(this._rect.X - deltaX, 0)), 
+                        Convert.ToInt32(Math.Max(this._rect.Y - deltaY, 0))
+                    ), 1);
             });
         }
     }
