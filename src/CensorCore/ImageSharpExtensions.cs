@@ -46,6 +46,10 @@ namespace CensorCore
         }
 
         public static Rectangle FitToBounds(this Rectangle rect, Image img) {
+            return (Rectangle)((RectangleF)rect).FitToBounds(img);
+        }
+
+        public static RectangleF FitToBounds(this RectangleF rect, Image img) {
             rect.X = Math.Max(rect.X, 0);
             rect.Y = Math.Max(rect.Y, 0);
             if (rect.X+rect.Width > img.Width) {
