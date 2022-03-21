@@ -31,6 +31,10 @@ namespace CensorCore {
             return box;
         }
 
+        internal static int GetSize(this Classification result) {
+            return result.Box.Height*result.Box.Width;
+        }
+
         internal static bool ContainsAny(this string src, params string[] options) {
             foreach (var opt in options)
             {

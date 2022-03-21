@@ -18,9 +18,9 @@ namespace CensorCore.Censoring {
             var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
             var extract = inputImage.Clone(x =>
             {
+                x.Crop((Rectangle)mask.GetBounds(inputImage));
                 x.GaussianBlur(level * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height) / 100)));
             });
-            extract.Mutate(x => x.Crop((Rectangle)mask.GetBounds(inputImage)));
             var mutation = mask.GetMutation(extract);
             return Task.FromResult<Action<IImageProcessingContext>?>(mutation);
         }

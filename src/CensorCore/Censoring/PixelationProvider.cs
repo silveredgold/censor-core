@@ -19,8 +19,8 @@ namespace CensorCore.Censoring
             var cropRect = result.Box.ToRectangle();
             var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
             var extract = inputImage.Clone(x => {
-                x.Pixelate(GetPixelSize(Math.Max(result.Box.Height, result.Box.Width), level));
                 x.Crop((Rectangle)mask.GetBounds(inputImage));
+                x.Pixelate(GetPixelSize(Math.Max(result.Box.Height, result.Box.Width), level));
             });
             
             return Task.FromResult<Action<IImageProcessingContext>?>(mask.GetMutation(extract));
