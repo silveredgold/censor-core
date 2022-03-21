@@ -20,17 +20,17 @@ namespace CensorCore.Censoring
             var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
             var extract = inputImage.Clone(x => {
                 x.Crop((Rectangle)mask.GetBounds(inputImage));
-                x.Pixelate(GetPixelSize(Math.Max(result.Box.Height, result.Box.Width), level));
+                x.Pixelate(GetPixelSize(Math.Max(inputImage.Height, inputImage.Width), level));
             });
             
             return Task.FromResult<Action<IImageProcessingContext>?>(mask.GetMutation(extract));
         }
 
-        private int GetPixelSize(int dimension, int level, int minimumSize = 5) {
+        private static int GetPixelSize(int dimension, int level, int minimumSize = 5) {
             var inverted = 21-level;
-            return Math.Max(minimumSize, Convert.ToInt32(Math.Round((dimension/(Math.Max(inverted, 5))*0.75)*1)));
+            return Math.Max(minimumSize, Convert.ToInt32(Math.Round(((dimension/3F)/(Math.Max(inverted, 5))*0.75)*1)));
         }
 
-        public bool Supports(string censorType) => censorType.ToLower().Contains("pixel");
+        public bool Supports(string censorType) => censorType.ToLower().StartsWith("pixel");
     }
 }

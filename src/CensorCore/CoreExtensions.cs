@@ -103,9 +103,10 @@ namespace CensorCore {
             }
         }
 
-        internal static (List<string>? Categories, bool PreferBox) GetCaptionOptions(this string method, string methodName) {
+        internal static (List<string>? Categories, bool PreferBox, bool WrapText) GetCaptionOptions(this string method, string methodName) {
             List<string>? categories = null;
             var preferBox = false;
+            var wordWrap = true;
             if (method.Contains('?') && method.Replace(methodName, string.Empty, StringComparison.CurrentCultureIgnoreCase)[0] == '?') {
                 //query string parse
                 var url = new Flurl.Url(method);
@@ -125,10 +126,13 @@ namespace CensorCore {
                         preferBox = boxPreferred;
                     }
                 }
-                return (categories, preferBox);
+                if (url.QueryParams.TryGetFirst("wordWrap", out var wrapObj) && bool.TryParse((string)wrapObj, out var wrap)) {
+                    wordWrap = wrap;
+                }
+                return (categories, preferBox, wordWrap);
 
             } else {
-                var catString = method.Split(":").LastOrDefault();
+                var catString = method.Split(":").Skip(1).LastOrDefault();
                 if (!string.IsNullOrWhiteSpace(catString)) {
                     var cats = catString.Split(',', ';').ToList();
                     if (!cats.Any()) {
@@ -138,7 +142,7 @@ namespace CensorCore {
                         categories = cats;
                     }
                 }
-                return (categories, preferBox);
+                return (categories, preferBox, wordWrap);
             }
         }
 

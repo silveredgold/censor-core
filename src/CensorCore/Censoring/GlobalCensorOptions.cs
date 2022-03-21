@@ -4,6 +4,6 @@ namespace CensorCore.Censoring
     {
         public bool? AllowTransformers { get;set; } = true;
         public float? RelativeCensorScale { get; set; } = 1F;
-        public float? PaddingScale { get; set; } = 0.5F;
+        public float? PaddingScale { get; set; } = 1F;
     }
 }

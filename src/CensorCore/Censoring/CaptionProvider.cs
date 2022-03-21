@@ -44,7 +44,7 @@ namespace CensorCore.Censoring {
                 TextOptions options = new(font) {
                     Origin = cropRect.GetCenter(), // Set the rendering origin.
                     TabWidth = 4, // A tab renders as 8 spaces wide
-                    WrappingLength = result.Box.Width, // Greater than zero so we will word wrap at 100 pixels wide
+                    WrappingLength = opts.WrapText ? result.Box.Width : 0, // Greater than zero so we will word wrap at 100 pixels wide
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 };

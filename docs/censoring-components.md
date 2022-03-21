@@ -42,6 +42,8 @@ The `Classification` type includes a `VirtualBox` property that designates the c
 
 The `IResultsTransformer` API is useful for transforming the results from the AI before the censoring begins, for changes that don't need the image data. For example, an `IResultsTransformer` can add new matches based on existing AI matches, or add/remove matches to be passed to the censoring providers. For a more grounded example, one of the bundled transformers applies a flat scaling to increase/decrease the size of the matches returned by the AI.
 
+While the behaviour is controlled by the `ICensoringProvider` in use, it's generally safe to assume that transformers will be run in the order they are registered. That being said, it's best not to **rely** on that behaviour.
+
 A no-op transformer can simply return the match collection it was passed. Additionally, the ResultsTransformer is currently **synchronous**. This may be changed in a future release.
 
 ### `ICensoringMiddleware`

@@ -43,7 +43,10 @@ public class IntersectingMatchMerger : IResultsTransformer {
                         list.Add(intersecting.ToList());
                     }
                 }
-                foreach (var set in list) {
+                foreach (var set in list.Select(l => {
+                    var maxConf = l.Max(lcm => lcm.Confidence);
+                    return l.Where(lc => lc.Confidence >= (maxConf*0.75F)).ToList();
+                })) {
                     if (set.Count() < 2) {
                         transformed.Add(set.First());
                     }
