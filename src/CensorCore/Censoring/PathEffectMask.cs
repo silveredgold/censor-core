@@ -33,8 +33,12 @@ namespace CensorCore.Censoring {
             this._drawing = new DrawingOptions();
         }
 
-        public RectangleF GetBounds() {
-            return new RectangularPolygon(_rect.GetPadded(_padding)).RotateDegree(_angle).Bounds;
+        public RectangleF GetBounds(Image? sourceImage = null) {
+            if (sourceImage == null) {
+                return new RectangularPolygon(_rect.GetPadded(_padding)).RotateDegree(_angle).Bounds;
+            } else {
+                return new RectangularPolygon(_rect.GetPadded(_padding)).RotateDegree(_angle).Bounds.FitToBounds(sourceImage);
+            }
         }
 
         private Image<Rgba32> GetMaskBase() {

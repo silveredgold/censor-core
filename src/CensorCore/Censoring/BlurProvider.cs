@@ -20,7 +20,7 @@ namespace CensorCore.Censoring {
             {
                 x.GaussianBlur(level * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height) / 100)));
             });
-            extract.Mutate(x => x.Crop((Rectangle)mask.GetBounds()));
+            extract.Mutate(x => x.Crop((Rectangle)mask.GetBounds(inputImage)));
             var mutation = mask.GetMutation(extract);
             return Task.FromResult<Action<IImageProcessingContext>?>(mutation);
         }

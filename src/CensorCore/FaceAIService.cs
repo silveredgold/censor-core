@@ -14,15 +14,6 @@ namespace CensorCore
             GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
         };
 
-        public static FaceAIService Create(byte[] model, IImageHandler imageHandler) {
-            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            var opts = new SessionOptions() {
-                GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL
-            };
-            var session = new InferenceSession(model, opts);
-            return new FaceAIService(session, imageHandler);
-        }
-
         public FaceAIService(InferenceSession session, IImageHandler imageHandler) {
             this._session = session;
             this._imageHandler = imageHandler;

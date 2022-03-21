@@ -11,7 +11,7 @@ namespace CensorCore.Censoring {
             var extract = inputImage.Clone(x =>
             {
                 x.GaussianBlur(Math.Max(level, 10) * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height) / 100)));
-                x.Crop((Rectangle)mask.GetBounds());
+                x.Crop((Rectangle)mask.GetBounds(inputImage));
             });
             return mask.GetMutation(extract);
         }
