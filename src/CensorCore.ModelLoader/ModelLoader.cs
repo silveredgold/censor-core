@@ -78,38 +78,19 @@ public class ModelLoader {
 
         var entryAssembly = assembly ?? typeof(ModelLoader).Assembly;
         var model = entryAssembly.GetManifestResourceNames();
-        if (model != null && model.Any()) {
-            Console.WriteLine(string.Join(';', model));
-        }
         //TODO: this doesn't match right
         if (model != null && model.Any() && model.FirstOrDefault(r => r.EndsWith(".onnx")) is var modelResource && modelResource != null) {
             // Console.WriteLine($"reading stream from {modelResource}");
             using var resourceStream = entryAssembly.GetManifestResourceStream(modelResource);
             if (resourceStream != null && resourceStream.CanRead) {
-                var modelBytes = ExtractStreamResource(resourceStream);
+                using var ms = new MemoryStream();
+                resourceStream.CopyTo(ms);
+                var modelBytes = ms.ToArray();
                 if (modelBytes != null && modelBytes.Length > 0) {
                     return modelBytes;
                 }
             }
         }
         return null;
-    }
-
-    private static byte[]? ExtractStreamResource(Stream resFilestream) {
-        if (resFilestream == null) return null;
-        byte[] bytes = new byte[resFilestream.Length];
-        // Console.WriteLine($"reading stream of length '{resFilestream.Length}'");
-        var reader = new BinaryReader(resFilestream);
-        var readBytes = reader.ReadBytes(Convert.ToInt32(resFilestream.Length));
-        // Console.WriteLine($"Read '{readBytes.Length}' bytes from resources");
-        // int numBytesToRead = (int)resFilestream.Length;
-        // int numBytesRead = 0;
-        // do {
-        //     // Read may return anything from 0 to 10.
-        //     int n = resFilestream.Read(bytes, numBytesRead, 10);
-        //     numBytesRead += n;
-        //     numBytesToRead -= n;
-        // } while (numBytesToRead > 0);
-        return bytes;
     }
 }
