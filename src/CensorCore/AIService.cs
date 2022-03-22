@@ -28,6 +28,7 @@ namespace CensorCore
         private readonly InferenceSession _session;
         private readonly IImageHandler _imageHandler;
         public bool Verbose { get; set; } = false;
+        public bool SkipGifs { get; set; } = true;
 
         private void Log(string message) {
             if (Verbose) {
@@ -94,6 +95,9 @@ namespace CensorCore
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImageData(data);
+            if (SkipGifs && imageData?.Format is SixLabors.ImageSharp.Formats.Gif.GifFormat) {
+                return null;
+            }
             timer.Stop();
             Log($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
             var result = await RunModelForImage(imageData, options);
