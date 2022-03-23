@@ -1,0 +1,8 @@
+tasks:
+  - init: |
+      dotnet tool restore
+      dotnet cake
+image: gitpod/workspace-dotnet
+vscode:
+  extensions:
+    - muhammad-sammy.csharp
