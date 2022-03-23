@@ -17,10 +17,10 @@ namespace CensorCore
             this._maxWidth = 1920;
         }
 
-        public ImageSharpHandler(int maxWidth, int maxHeight)
+        public ImageSharpHandler(int? maxWidth, int? maxHeight)
         {
-            this._maxWidth = maxWidth;
-            this._maxHeight = maxHeight;
+            this._maxWidth = maxWidth ?? 1920;
+            this._maxHeight = maxHeight ?? 1080;
         }
 
         private async Task<byte[]> DownloadFile(Uri path)
@@ -119,6 +119,11 @@ namespace CensorCore
 
         public Task<ImageData> LoadImageData(byte[] contents) {
             var img = Image.Load<Rgba32>(contents, out var format);
+            var frameCount = img.Frames.Count;
+            for (int i = 1; i < frameCount; i++)
+            {
+                img.Frames.RemoveFrame(frameCount - i);
+            }
             var samples = this.ResizeImage(img);
             float scaleFactor = (float)img.Height / samples.Height;
             return Task.FromResult(new ImageData(img) {
