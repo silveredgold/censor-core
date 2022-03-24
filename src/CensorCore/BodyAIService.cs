@@ -1,7 +1,6 @@
 using Microsoft.ML.OnnxRuntime;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System.Diagnostics;
 
 namespace CensorCore {
     public class BodyAIService : IAIService<BoundingBox> {
@@ -89,22 +88,10 @@ namespace CensorCore {
             var img = imgData.SampledImage ?? imgData.SourceImage;
             var foreground = results[0].AsTensor<float>().ToList();
             var alphaPred = results[1].AsTensor<float>().ToList();
-            // var pixelData = Array.Empty<SixLabors.ImageSharp.PixelFormats.Rgba32>();
-            var pixelData = new List<SixLabors.ImageSharp.PixelFormats.Rgba32>();
             int newMinX = img.Width;
             int newMinY = img.Height;
             int newMaxX = 0;
             int newMaxY = 0;
-
-            var timer = new Stopwatch();
-            // timer.Start();
-            // var rows = alphaPred.Chunk(imgData.SampledImage.Width).Select(ch => ch.ToList()).ToList();
-            // var minX = rows.Select(ch => ch.IndexOf(ch.FirstOrDefault(ap => ap > 0.5F))).Where(api => api != default(float)).Min();
-            // var minY = rows.IndexOf(rows.FirstOrDefault(ro => ro.Any(p => p > 0.5F)) ?? rows.First());
-            // var maxX = rows.Select(ch => ch.IndexOf(ch.LastOrDefault(ap => ap > 0.5F))).Where(api => api != default(float)).Max();
-            // var maxY = rows.IndexOf(rows.LastOrDefault(ro => ro.Any(ap => ap > 0.5F)) ?? rows.Last());
-            // var listMethod = timer.Elapsed.TotalSeconds;
-            // timer.Restart();
             
             img.ProcessPixelRows(accessor =>
             {
@@ -134,6 +121,20 @@ namespace CensorCore {
             });
             var rect = Rectangle.FromLTRB(newMinX, newMinY, newMaxX, newMaxY);
             return new[] {new BoundingBox(rect.X, rect.Y, rect.X+rect.Width, rect.Y+rect.Height)};
+        }
+
+        private RectangleF GetFromAlphaPixels(List<float> alphaPred, int imageWidth, float threshold = 0.5F) {
+            // var timer = new System.Diagnostics.Stopwatch();
+            // timer.Start();
+            var rows = alphaPred.Chunk(imageWidth).Select(ch => ch.ToList()).ToList();
+            var minX = rows.Select(ch => ch.IndexOf(ch.FirstOrDefault(ap => ap > 0.5F))).Where(api => api != default(float)).Min();
+            var minY = rows.IndexOf(rows.FirstOrDefault(ro => ro.Any(p => p > 0.5F)) ?? rows.First());
+            var maxX = rows.Select(ch => ch.IndexOf(ch.LastOrDefault(ap => ap > 0.5F))).Where(api => api != default(float)).Max();
+            var maxY = rows.IndexOf(rows.LastOrDefault(ro => ro.Any(ap => ap > 0.5F)) ?? rows.Last());
+            // var listMethod = timer.Elapsed.TotalSeconds;
+            // timer.Restart();
+            var rect = Rectangle.FromLTRB(minX, minY, maxX, maxY);
+            return rect;
         }
     }
 }

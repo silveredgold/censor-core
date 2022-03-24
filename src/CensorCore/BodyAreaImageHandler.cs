@@ -26,7 +26,6 @@ public class BodyAreaImageHandler : IImageHandler {
         };
         var fSession = new InferenceSession(model, opts);
         var fService = new BodyAIService(fSession, _imageHandler);
-        fService.Verbose = true;
         _mode = mode;
         _bodyAi = fService;
         _bodyAi.FilterOutput = _mode == OptimizationMode.Aggressive;

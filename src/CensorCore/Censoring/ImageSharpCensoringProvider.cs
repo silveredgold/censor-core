@@ -100,11 +100,9 @@ namespace CensorCore.Censoring
                     //ignored
                 }
             }
-            // await img.SaveAsPngAsync("./censored-result-2.png");
             using (var ms = new MemoryStream())
             {
                 if (image.ImageData.Format != null) {
-                    // new SixLabors.ImageSharp.Formats.ImageFormatManager().FindFormatByMimeType(image.ImageData.Format);
                     var format = image.ImageData.Format;
                     img.Save(ms, format);
                     return new CensoredImage(ms.ToArray(), format.DefaultMimeType, img.ToBase64String(format));
