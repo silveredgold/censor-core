@@ -95,7 +95,7 @@ namespace CensorCore.Censoring
             foreach (var middleware in _middlewares)
             {
                 try {
-                    await middleware.OnAfterCensoring(img);
+                    await middleware.OnAfterCensoring(img, parser);
                 } catch {
                     //ignored
                 }

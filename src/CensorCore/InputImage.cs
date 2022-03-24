@@ -43,6 +43,6 @@ namespace CensorCore
             Image = image;
         }
 
-        ImageData Image { get; set; }
+        internal ImageData Image { get; set; }
     }
 }

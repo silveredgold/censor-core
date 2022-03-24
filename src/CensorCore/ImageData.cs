@@ -9,7 +9,7 @@ namespace CensorCore
         {
             SourceImage = srcImage;
         }
-        internal Image<Rgba32> SourceImage { get; set; }
+        public Image<Rgba32> SourceImage { get; internal set; }
         internal Image<Rgba32>? SampledImage {get;set;}
         internal IImageFormat? Format {get;set;}
         public SizeF ScaleFactor {get;set;} = new SizeF(1,1);

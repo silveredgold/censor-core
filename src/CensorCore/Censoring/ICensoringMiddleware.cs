@@ -8,7 +8,9 @@ namespace CensorCore.Censoring;
 public interface ICensoringMiddleware {
     Task Prepare() => Task.CompletedTask;
     Task<IEnumerable<Classification>?> OnBeforeCensoring(ImageResult image, IResultParser? parser, Action<int, Action<IImageProcessingContext>> addLateMutation);
-    Task OnAfterCensoring(Image image);
+    Task OnAfterCensoring(Image image, IResultParser? parser) {
+        return Task.CompletedTask;
+    }
 }
 
 public class GifWatermarkMiddleware : ICensoringMiddleware {
@@ -17,9 +19,6 @@ public class GifWatermarkMiddleware : ICensoringMiddleware {
     public GifWatermarkMiddleware(FontCollection? fonts = null)
     {
         _fonts = fonts ?? CaptionProvider.GetDefaultFontCollection();
-    }
-    public Task OnAfterCensoring(Image image) {
-        return Task.CompletedTask;
     }
 
     public Task<IEnumerable<Classification>?> OnBeforeCensoring(ImageResult result, IResultParser? parser, Action<int, Action<IImageProcessingContext>> addLateMutation) {
@@ -51,10 +50,6 @@ public class FacialFeaturesMiddleware : ICensoringMiddleware {
         _fonts = CaptionProvider.GetDefaultFontCollection();
         _assetStore = assetStore;
         _faceService = new FacialFeaturesService(_assetStore);
-    }
-
-    public Task OnAfterCensoring(Image image) {
-        return Task.CompletedTask;
     }
 
     public async Task<IEnumerable<Classification>?> OnBeforeCensoring(ImageResult result, IResultParser? parser, Action<int, Action<IImageProcessingContext>> addLateMutation) {

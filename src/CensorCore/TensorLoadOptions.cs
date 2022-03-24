@@ -64,7 +64,8 @@ namespace CensorCore {
 
         public override IEnumerable<NamedOnnxValue> GetFeeds(InferenceSession session, InputImage<float> input) {
             var ratio = new DenseTensor<float>(1);
-            ratio[0] = 0.25F;
+            var img = input.Image.SampledImage ?? input.Image.SourceImage;
+            ratio[0] = Math.Max(0.25F, 480F/(Math.Max(img.Width, img.Height)));
             var dict = new Dictionary<string, Tensor<float>>() {
                 ["src"] = input.Tensor,
                 ["r1i"] = new DenseTensor<float>(new[] {1,1,1,1}),
