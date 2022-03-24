@@ -187,7 +187,7 @@ namespace CensorCore
                 }
                 if (confidence > 0 && !string.IsNullOrWhiteSpace(className) && boxes.Count > i) {
                     if (confidence >= matchOptions.GetScoreForClass(className)) {
-                        var box = boxes.ElementAt(i).ToBox(imgData.ScaleFactor);
+                        var box = boxes.ElementAt(i).ToBox(imgData.ScaleFactor, imgData.SampleOffset);
                         results.Add(new Classification(box, confidence, className));
                         // yield return new Classification(box, confidence, className);
                     }

@@ -84,6 +84,14 @@ namespace CensorCore
             var angle = (180/Math.PI) * Math.Atan2(deltaY, deltaX);
             return (float)(-angle);
         }
+
+        internal static BoundingBox ToBox(this float[] coords, SizeF scaleFactor, Point offset)
+        {
+            var offX = offset.X*scaleFactor.Width;
+            var offY = offset.Y*scaleFactor.Height;
+            // return new BoundingBox((coords[0]+offset.X) * scaleFactor.Width, (coords[1]+offset.Y) * scaleFactor.Height, (coords[2]+offset.X) * scaleFactor.Width, (coords[3]+offset.Y) * scaleFactor.Height);
+            return new BoundingBox((coords[0]*scaleFactor.Width) + offX, (coords[1]*scaleFactor.Height) + offY, (coords[2]*scaleFactor.Width) + offX, (coords[3]*scaleFactor.Height) +offY);
+        }
     }
 
 

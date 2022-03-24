@@ -79,7 +79,7 @@ namespace CensorCore.Censoring.Features {
             var entryAssembly = assembly ?? typeof(FacialFeaturesMiddleware).Assembly;
             var model = entryAssembly.GetManifestResourceNames();
             //TODO: this doesn't match right
-            if (model != null && model.Any() && model.FirstOrDefault(r => r.EndsWith(".onnx")) is var modelResource && modelResource != null) {
+            if (model != null && model.Any() && model.FirstOrDefault(r => r.Contains("landmarks") && r.EndsWith(".onnx")) is var modelResource && modelResource != null) {
                 // Console.WriteLine($"reading stream from {modelResource}");
                 using var resourceStream = entryAssembly.GetManifestResourceStream(modelResource);
                 if (resourceStream != null && resourceStream.CanRead) {

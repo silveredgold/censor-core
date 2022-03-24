@@ -1,3 +1,4 @@
+using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -10,6 +11,7 @@ namespace CensorCore
     {
         private readonly int _maxWidth;
         private readonly int _maxHeight;
+        public bool ForceFit {get;set;}
 
         public ImageSharpHandler()
         {
@@ -58,16 +60,26 @@ namespace CensorCore
             var width = image.Width;
             var height = image.Height;
             var landscape = width > height;
-            var sampled = image.Clone(ctx => {
-                if (landscape && width > this._maxWidth) {
-                    ctx.Resize(this._maxWidth, 0);
-                } else if (!landscape && height > this._maxHeight) {
-                    ctx.Resize(0, this._maxHeight);
-                }
-            });
-            return sampled;
+            if (!ForceFit) {
+                var sampled = image.Clone(ctx => {
+                    if (landscape && width > this._maxWidth) {
+                        ctx.Resize(this._maxWidth, 0);
+                    } else if (!landscape && height > this._maxHeight) {
+                        ctx.Resize(0, this._maxHeight);
+                    }
+                });
+                return sampled;
+            } else {
+                return image.Clone(ctx => {
+                    ctx.Resize(new ResizeOptions {
+                        Mode = ResizeMode.Max,
+                        Size = new Size(this._maxWidth, this._maxHeight)
+                    });
+                });
+            }
         }
 
+        [Obsolete("Use typed variant instead", true)]
         public Task<InputImage> LoadToTensor(ImageData image)
         {
             var img = image.SampledImage ?? image.SourceImage;
@@ -125,54 +137,12 @@ namespace CensorCore
                 img.Frames.RemoveFrame(frameCount - i);
             }
             var samples = this.ResizeImage(img);
-            float scaleFactor = (float)img.Height / samples.Height;
+            var scaleSize = new SizeF((float)img.Width / samples.Width, (float)img.Height / samples.Height);
             return Task.FromResult(new ImageData(img) {
                 SampledImage = samples,
-                ScaleFactor = scaleFactor,
+                ScaleFactor = scaleSize,
                 Format = format
             });
-        }
-    }
-
-    public class NudeNetLoadOptions : TensorLoadOptions<float> {
-        public NudeNetLoadOptions() : base(img => new[] {1, img.Height, img.Width, 3}) {
-            LoadPixel = LoadNudeNetPixels;
-        }
-
-        private void LoadNudeNetPixels(Tensor<float> data, Point point, ref Rgba32 pixel) {
-            var y = point.Y;
-            var x = point.X;
-            data[0, y, x, 0] = pixel.B - 103.939F;
-            data[0, y, x, 1] = pixel.G - 116.779F;
-            data[0, y, x, 2] = pixel.R - 123.68F;
-        }
-    }
-
-    public class FaceDetectionLoadOptions : TensorLoadOptions<float> {
-        public FaceDetectionLoadOptions() : base(img => new[] {1, 3, img.Height, img.Width}) {
-            LoadPixel = LoadLandmarkPixels;
-        }
-
-        private void LoadLandmarkPixels(Tensor<float> data, Point point, ref Rgba32 pixel) {
-            var y = point.Y;
-            var x = point.X;
-            data[0, 0, y, x] = (pixel.B - 127F)/128;
-            data[0, 1, y, x] = (pixel.G - 127F)/128;
-            data[0, 2, y, x] = (pixel.R - 127F)/128;
-        }
-    }
-
-    public class LandmarksLoadOptions : TensorLoadOptions<float> {
-        public LandmarksLoadOptions() : base(img => new[] {1, 3, 112, 112}) {
-            LoadPixel = LoadLandmarkPixels;
-        }
-
-        private void LoadLandmarkPixels(Tensor<float> data, Point point, ref Rgba32 pixel) {
-            var y = point.Y;
-            var x = point.X;
-            data[0, 0, y, x] = pixel.B / 255F;
-            data[0, 1, y, x] = pixel.G / 255F;
-            data[0, 2, y, x] = pixel.R / 255F;
         }
     }
 }

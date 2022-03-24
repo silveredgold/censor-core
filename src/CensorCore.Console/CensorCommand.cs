@@ -41,9 +41,9 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
             return 412;
         }
 
-        var handler = new ImageSharpHandler(1000, 1000);
+        var handler = new BodyAreaImageHandler(new ImageSharpHandler(1000, 1000), settings.OptimizationMode);
         AnsiConsole.MarkupLine("Preparing AI service and censoring components");
-        var svc = Runtime.AIRuntime.CreateService(model, new ImageSharpHandler(1000,1000), settings.EnableAcceleration);
+        var svc = Runtime.AIRuntime.CreateService(model, handler, settings.EnableAcceleration);
         if (settings.Verbose) {
             svc.Verbose = true;
         }
@@ -53,7 +53,7 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         var stickers = new StickerProvider(new EmptyAssetStore());
         var caption = new CaptionProvider(new EmptyAssetStore());
         var transformers = new IResultsTransformer[] {new CensorScaleTransformer(new GlobalCensorOptions {RelativeCensorScale = 1F}), new IntersectingMatchMerger() };
-        var middleware = new ICensoringMiddleware[] { new FacialFeaturesMiddleware(new EmptyAssetStore())};
+        var middleware = new ICensoringMiddleware[] { new FacialFeaturesMiddleware(new EmptyAssetStore()), new GifWatermarkMiddleware()};
         var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption }, transformers: settings.NoTransformers ? Array.Empty<IResultsTransformer>() : transformers, middlewares: middleware);
 
         AnsiConsole.MarkupLine("Invoking model...");
@@ -209,6 +209,11 @@ public class CensoringSettings : CommandSettings {
     [Description("Disables the default results transformers. Censors the image exactly as it comes from the classifier.")]
     [DefaultValue(false)]
     public bool NoTransformers {get;set;}
+
+    [CommandOption("--optimization")]
+    [Description("Override the default optimization mode.")]
+    [DefaultValue(OptimizationMode.Normal)]
+    public OptimizationMode OptimizationMode {get;set;}
 }
 
 
