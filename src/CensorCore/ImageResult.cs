@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace CensorCore
 {
     /// <summary>
@@ -34,6 +36,7 @@ namespace CensorCore
         /// <summary>
         /// The source data for the image the results relate to.
         /// </summary>
+        [JsonIgnore]
         public ImageData ImageData { get; protected set; }
 
         /// <summary>
