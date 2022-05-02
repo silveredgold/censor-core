@@ -46,7 +46,8 @@ namespace CensorCore.Censoring {
                     TabWidth = 4, // A tab renders as 8 spaces wide
                     WrappingLength = opts.WrapText ? result.Box.Width : 0, // Greater than zero so we will word wrap at 100 pixels wide
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextAlignment = TextAlignment.Center
                 };
                 IBrush brush = Brushes.Solid(Color.White);
                 IPen pen = Pens.Solid(Color.Black, (result.Box.Width/80F)*(level.GetScaleFactor(10F)));
