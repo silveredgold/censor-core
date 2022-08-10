@@ -15,9 +15,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Condition="'$(RuntimeIdentifier)' == 'win-x64'" Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.10.0" />
-    <PackageReference Condition="'$(RuntimeIdentifier)' == 'linux-x64'" Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.10.0" />
-    <!-- <PackageReference Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win-x64'" Include="Microsoft.ML.OnnxRuntime" Version="1.10.0" /> -->
+    <!-- <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.10.0" /> -->
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'win-x64'" Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.12.1" />
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'linux-x64'" Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.12.1" />
+    <PackageReference Condition="'$(RuntimeIdentifier)' != 'win-x64' And '$(RuntimeIdentifier)' != 'linux-x64'" Include="Microsoft.ML.OnnxRuntime" Version="1.12.1" />
+    
   </ItemGroup>
 
 </Project>

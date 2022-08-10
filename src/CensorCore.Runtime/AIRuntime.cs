@@ -7,6 +7,7 @@ public static class AIRuntime
     public static AIService CreateService(byte[] model, IImageHandler imageHandler, bool enableAcceleration = true) {
             var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            var isMac = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
             if ((isWindows || isLinux) && enableAcceleration) {
                 InferenceSession? hwSession = null;
                 var deviceId = 0;
@@ -17,6 +18,8 @@ public static class AIRuntime
                             hwOpts.AppendExecutionProvider_DML(deviceId);
                         } else if (isLinux) {
                             hwOpts.AppendExecutionProvider_CUDA(deviceId);
+                        } else if (isMac) {
+                            hwOpts.AppendExecutionProvider_CoreML();
                         }
                         hwSession = new InferenceSession(model, hwOpts);
                         return new AIService(hwSession, imageHandler);
