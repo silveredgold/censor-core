@@ -31,13 +31,19 @@ namespace CensorCore.Censoring
             var padding = inputImage.GetPadding(_globalOpts);
             float boxRatio = (float)result.Box.Width / result.Box.Height;
             var options = method.GetOptions("sticker");
+            
             var useBlur = options.Parameters != null
                 ? options.Parameters.TryGetFirst("useBlur", out var optionObj) && bool.TryParse((string)optionObj, out var useBlurOption) && useBlurOption
-                : true;
+                : _globalOpts.ForcePixelBackground.HasValue ? !_globalOpts.ForcePixelBackground.Value : true;
+            var usePixels = _globalOpts.ForcePixelBackground == true || ( options.Parameters != null
+                ? options.Parameters.TryGetFirst("usePixels", out var pixelOption) && bool.TryParse((string)pixelOption, out var usePixelOption) && usePixelOption
+                : false );
             var sticker = await GetImageAsync(boxRatio, options.Categories);
             if (useBlur) {
                 var blurMutation = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level);
                 mutations.Add(blurMutation);
+            } else if (usePixels) {
+                var pixelMutation = CensorEffects.GetMaskedPixelEffect(inputImage, result, padding, level);
             }
             var effectCenter = result.Box.GetCenter();
             if (sticker != null) {
