@@ -32,7 +32,7 @@ namespace CensorCore.Censoring {
                 var bar = CensorEffects.GetBlackBarEffect(inputImage, result, level);
                 mutations.Add(bar);
             } else {
-                var blur = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level);
+                var blur = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level, minimumLevel: 10);
                 mutations.Add(blur);
             }
             

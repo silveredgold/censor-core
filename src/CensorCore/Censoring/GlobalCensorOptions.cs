@@ -6,5 +6,7 @@ namespace CensorCore.Censoring
         public float? RelativeCensorScale { get; set; } = 1F;
         public float? PaddingScale { get; set; } = 1F;
         public bool? ForcePixelBackground { get; set; } = false;
+
+        public Dictionary<string, float> ClassStrength {get;set;} = new Dictionary<string, float>();
     }
 }

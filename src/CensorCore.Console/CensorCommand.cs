@@ -47,12 +47,13 @@ public class CensorCommand : AsyncCommand<CensorCommand.CensorCommandSettings> {
         if (settings.Verbose) {
             svc.Verbose = true;
         }
-        var blur = new BlurProvider();
-        var pixel = new PixelationProvider();
+        var globalOpts = new GlobalCensorOptions {RelativeCensorScale = 1F};
+        var blur = new BlurProvider(globalOpts);
+        var pixel = new PixelationProvider(globalOpts);
         var bars = new BlackBarProvider();
-        var stickers = new StickerProvider(new EmptyAssetStore());
-        var caption = new CaptionProvider(new EmptyAssetStore());
-        var transformers = new IResultsTransformer[] {new CensorScaleTransformer(new GlobalCensorOptions {RelativeCensorScale = 1F}), new IntersectingMatchMerger() };
+        var stickers = new StickerProvider(new EmptyAssetStore(), globalOpts);
+        var caption = new CaptionProvider(new EmptyAssetStore(), null, globalOpts);
+        var transformers = new IResultsTransformer[] {new CensorScaleTransformer(globalOpts), new IntersectingMatchMerger() };
         var middleware = new ICensoringMiddleware[] { new FacialFeaturesMiddleware(new EmptyAssetStore()), new GifWatermarkMiddleware()};
         var cens = new ImageSharpCensoringProvider(new ICensorTypeProvider[] { blur, pixel, bars, stickers, caption }, transformers: settings.NoTransformers ? Array.Empty<IResultsTransformer>() : transformers, middlewares: middleware);
 

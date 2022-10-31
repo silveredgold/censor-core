@@ -40,7 +40,7 @@ namespace CensorCore.Censoring
                 : false );
             var sticker = await GetImageAsync(boxRatio, options.Categories);
             if (useBlur) {
-                var blurMutation = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level);
+                var blurMutation = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level, minimumLevel: 10);
                 mutations.Add(blurMutation);
             } else if (usePixels) {
                 var pixelMutation = CensorEffects.GetMaskedPixelEffect(inputImage, result, padding, level);

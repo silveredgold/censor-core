@@ -14,14 +14,8 @@ namespace CensorCore.Censoring {
         }
         public Task<Action<IImageProcessingContext>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level) {
             var padding = inputImage.GetPadding(_globalOpts);
-            var cropRect = result.Box.ToRectangle();
-            var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
-            var extract = inputImage.Clone(x =>
-            {
-                x.Crop((Rectangle)mask.GetBounds(inputImage));
-                x.GaussianBlur(level * Math.Max(2.5F, (Math.Min(cropRect.Width, cropRect.Height) / 100)));
-            });
-            var mutation = mask.GetMutation(extract);
+            var overrideScale = _globalOpts.ClassStrength.GetValueOrDefault(result.Label, 1F);
+            var mutation = CensorEffects.GetMaskedBlurEffect(inputImage, result, padding, level, overrideScale);
             return Task.FromResult<Action<IImageProcessingContext>?>(mutation);
         }
     }

@@ -16,7 +16,7 @@ namespace CensorCore.Censoring
         public Task<Action<IImageProcessingContext>?> CensorImage(Image<Rgba32> inputImage, Classification result, string method, int level)
         {
             var padding = inputImage.GetPadding(_globalOpts);
-            var mutation = CensorEffects.GetMaskedPixelEffect(inputImage, result, padding, level);
+            var mutation = CensorEffects.GetMaskedPixelEffect(inputImage, result, padding, level, _globalOpts.ClassStrength.GetValueOrDefault(result.Label, 1F));
             return Task.FromResult<Action<IImageProcessingContext>?>(mutation);
             // var cropRect = result.Box.ToRectangle();
             // var mask = new PathEffectMask(cropRect, result.SourceAngle.GetValueOrDefault(), padding);
