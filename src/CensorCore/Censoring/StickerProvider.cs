@@ -44,6 +44,7 @@ namespace CensorCore.Censoring
                 mutations.Add(blurMutation);
             } else if (usePixels) {
                 var pixelMutation = CensorEffects.GetMaskedPixelEffect(inputImage, result, padding, level);
+                mutations.Add(pixelMutation);
             }
             var effectCenter = result.Box.GetCenter();
             if (sticker != null) {
