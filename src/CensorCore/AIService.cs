@@ -91,7 +91,7 @@ namespace CensorCore
             this._imageHandler = imageHandler;
         }
 
-        public async Task<ImageResult?> RunModel(byte[] data, MatchOptions? options = null) {
+        public async Task<ImageResult?> RunModel<TTensor>(byte[] data, TensorLoadOptions<TTensor> loadOptions, MatchOptions? options = null) {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImageData(data);
@@ -100,14 +100,22 @@ namespace CensorCore
             }
             timer.Stop();
             Log($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
-            var result = await RunModelForImage(imageData, options);
+            var result = await RunModelForImage<TTensor>(imageData, options, loadOptions);
             if (result != null && result.Session != null) {
                 result.Session.ImageLoadTime = timer.Elapsed;
             }
             return result;
         }
 
+        public async Task<ImageResult?> RunModel(byte[] data, MatchOptions? options = null) {
+            return await RunModel<float>(data, new NudeNetLoadOptions(), options);
+        }
+
         public async Task<ImageResult?> RunModel(string url, MatchOptions? options = null) {
+            return await RunModel<float>(url, new NudeNetLoadOptions(), options);
+        }
+
+        public async Task<ImageResult?> RunModel<TTensor>(string url, TensorLoadOptions<TTensor> loadOptions, MatchOptions? options = null) {
             var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
             var imageData = await this._imageHandler.LoadImage(url);
@@ -116,19 +124,19 @@ namespace CensorCore
             }
             timer.Stop();
             Log($"Loaded image data in {timer.Elapsed.TotalSeconds}s");
-            var result = await RunModelForImage(imageData, options);
+            var result = await RunModelForImage<TTensor>(imageData, options, loadOptions);
             if (result != null && result.Session != null) {
                 result.Session.ImageLoadTime = timer.Elapsed;
             }
             return result;
         }
 
-        private async Task<ImageResult?> RunModelForImage(ImageData imageData, MatchOptions? options) {
+        private async Task<ImageResult?> RunModelForImage<TTensor>(ImageData imageData, MatchOptions? options, TensorLoadOptions<TTensor> loadOptions) {
             options ??= MatchOptions.GetDefault();
             var timer = new System.Diagnostics.Stopwatch();
             timer.Restart();
             // var modelInput = await this._imageHandler.LoadToTensor(imageData);
-            var modelInput = await this._imageHandler.LoadToTensor<float>(imageData, new NudeNetLoadOptions());
+            var modelInput = await this._imageHandler.LoadToTensor<TTensor>(imageData, loadOptions);
             timer.Stop();
             var tensorLoadTime = timer.Elapsed;
             Log($"Loaded tensor data in {timer.Elapsed.TotalSeconds}s");
@@ -153,8 +161,8 @@ namespace CensorCore
             return result;
         }
 
-        private IEnumerable<NamedOnnxValue> GetFeeds(InputImage<float> input) {
-            return this._session.InputMetadata.Select(im => NamedOnnxValue.CreateFromTensor<float>(im.Key, input.Tensor));
+        private IEnumerable<NamedOnnxValue> GetFeeds<TTensor>(InputImage<TTensor> input) {
+            return this._session.InputMetadata.Select(im => NamedOnnxValue.CreateFromTensor<TTensor>(im.Key, input.Tensor));
         }
 
         private IEnumerable<Classification> GetResults(ImageData imgData, List<DisposableNamedOnnxValue> tensorOutput, MatchOptions matchOptions) {
