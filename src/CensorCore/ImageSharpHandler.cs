@@ -46,7 +46,7 @@ namespace CensorCore
             if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri))
             {
                 var contents = uri.IsFile
-                    ? await System.IO.File.ReadAllBytesAsync(uri.AbsolutePath)
+                    ? await System.IO.File.ReadAllBytesAsync(System.Web.HttpUtility.UrlDecode(uri.AbsolutePath))
                     : await DownloadFile(uri);
                 return await LoadImageData(contents);
             } else
