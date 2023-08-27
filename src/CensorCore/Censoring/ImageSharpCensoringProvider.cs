@@ -52,7 +52,7 @@ namespace CensorCore.Censoring
                 foreach (var middleware in _middlewares)
                 {
                     try {
-                        var additionalResults = await middleware.OnBeforeCensoring(image, parser, AddCensor);
+                        var additionalResults = await middleware.OnBeforeCensoring(image, parser, (i, ctx) => AddCensor(i, null, ctx));
                         if (additionalResults != null) {
                             transformedMatches = transformedMatches.Concat(additionalResults);
                         }
@@ -72,7 +72,7 @@ namespace CensorCore.Censoring
                     var censorMutation = await provider.CensorImage(img, match, options.CensorType, options.Level ?? 10);
                     if (censorMutation != null)
                     {
-                        AddCensor(provider.Layer, censorMutation);
+                        AddCensor(provider.Layer, options, censorMutation);
                     }
                     timer.Stop();
                     if (timer.Elapsed.TotalSeconds > 1D) {
@@ -112,12 +112,15 @@ namespace CensorCore.Censoring
                 }
                 
             }
-            void AddCensor(int layer, Action<IImageProcessingContext> mutation) {
+            void AddCensor(int layer, ImageCensorOptions? censor, Action<IImageProcessingContext> mutation) {
                 if (censorEffects != null) {
-                if (!censorEffects.ContainsKey(layer)) {
-                            censorEffects[layer] = new List<Action<IImageProcessingContext>>();
-                        }
-                        censorEffects[layer].Add(mutation);
+                    if (censor?.CensorType != null && _options.LayerModifier.TryGetValue(censor.CensorType, out var mod)) {
+                        layer += mod;
+                    }
+                    if (!censorEffects.ContainsKey(layer)) {
+                        censorEffects[layer] = new List<Action<IImageProcessingContext>>();
+                    }
+                    censorEffects[layer].Add(mutation);
                 }
             }
         }
