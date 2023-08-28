@@ -32,7 +32,7 @@ namespace CensorCore.Censoring
 
         public async Task<CensoredImage> CensorImage(ImageResult image, IResultParser? parser = null) {
             parser = parser ?? this._parser;
-            var img = image.ImageData.SourceImage;
+            var img = image.ImageData.SourceImage.Clone();
             var censorEffects = new Dictionary<int, List<Action<IImageProcessingContext>>>();
             // var matches = image.Results.GroupBy(r => r.Label).ToList();
             IEnumerable<Classification> transformedMatches = image.Results;
@@ -52,7 +52,7 @@ namespace CensorCore.Censoring
                 foreach (var middleware in _middlewares)
                 {
                     try {
-                        var additionalResults = await middleware.OnBeforeCensoring(image, parser, (i, ctx) => AddCensor(i, null, ctx));
+                        var additionalResults = await middleware.OnBeforeCensoring(image, parser, (i, ctx) => AddCensor(i, null, null, ctx));
                         if (additionalResults != null) {
                             transformedMatches = transformedMatches.Concat(additionalResults);
                         }
@@ -72,7 +72,7 @@ namespace CensorCore.Censoring
                     var censorMutation = await provider.CensorImage(img, match, options.CensorType, options.Level ?? 10);
                     if (censorMutation != null)
                     {
-                        AddCensor(provider.Layer, options, censorMutation);
+                        AddCensor(provider.Layer, match, options, censorMutation);
                     }
                     timer.Stop();
                     if (timer.Elapsed.TotalSeconds > 1D) {
@@ -112,9 +112,9 @@ namespace CensorCore.Censoring
                 }
                 
             }
-            void AddCensor(int layer, ImageCensorOptions? censor, Action<IImageProcessingContext> mutation) {
+            void AddCensor(int layer, Classification? match, ImageCensorOptions? censor, Action<IImageProcessingContext> mutation) {
                 if (censorEffects != null) {
-                    if (censor?.CensorType != null && _options.LayerModifier.TryGetValue(censor.CensorType, out var mod)) {
+                    if (censor?.CensorType != null && _options.LayerModifier.TryGetValue(match?.Label ?? string.Empty, out var mod)) {
                         layer += mod;
                     }
                     if (!censorEffects.ContainsKey(layer)) {
